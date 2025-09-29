@@ -19,11 +19,6 @@ DISCORD_TOKEN=your_bot_token_here
 node bot.js
 ```
 
-## Commands
-
-- `!user <userid>` - Get information about a user
-- `!help` - Show help message
-
 ## Features
 
 - Displays user information including:
