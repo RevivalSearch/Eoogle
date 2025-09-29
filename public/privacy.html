@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Eoogle</title>
+    <link href="output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Check for saved theme preference or use system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50 backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-search text-white"></i>
+                        </div>
+                        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">Eoogle</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html#features" class="nav-link">Features</a>
+                    <a href="index.html#why-cache" class="nav-link">Why We Cache</a>
+                    <a href="tos.html" class="nav-link">Terms</a>
+                    <button id="theme-toggle" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1422001365101576303&permissions=8797166954496&integration_type=0&scope=bot" 
+                       class="btn-primary">
+                        <i class="fab fa-discord mr-2"></i> Add to Discord
+                    </a>
+                </div>
+                <div class="md:hidden">
+                    <button class="mobile-menu-button p-2 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
+            <p class="text-xl text-white/90 max-w-3xl mx-auto">Last updated: September 28, 2023</p>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden">
+            <div class="p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+            <div class="p-8">
+                <div class="flex items-center mb-8">
+                    <div class="p-3 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 mr-4">
+                        <i class="fas fa-shield-alt text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Your Privacy Matters</h2>
+                        <p class="text-gray-600 dark:text-gray-300">We're committed to protecting your personal information and being transparent about what we collect.</p>
+                    </div>
+                </div>
+            
+            <div class="content prose dark:prose-invert prose-indigo dark:prose-dark max-w-none">
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">1. Information We Collect</h2>
+                    <p class="mb-4">Eoogle collects the following types of information:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>ECSR user IDs and usernames</li>
+                        <li>Discord user IDs for linked accounts</li>
+                        <li>Command usage data (for analytics and improvement)</li>
+                        <li>Server IDs where the bot is used</li>
+                    </ul>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">2. How We Use Your Information</h2>
+                    <p class="mb-4">We use the collected information to:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>Provide and maintain our service</li>
+                        <li>Track username changes and history</li>
+                        <li>Improve and optimize our service</li>
+                        <li>Monitor usage of the bot</li>
+                        <li>Detect, prevent and address technical issues</li>
+                    </ul>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">3. Data Storage and Security</h2>
+                    <p class="mb-4">We implement appropriate security measures to protect your data:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>Data is stored securely on our servers</li>
+                        <li>Access to data is restricted to authorized personnel only</li>
+                        <li>We use industry-standard encryption for data in transit and at rest</li>
+                    </ul>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">4. Data Retention</h2>
+                    <p class="mb-4">We retain collected data for as long as necessary to provide our services. Users may request deletion of their data by contacting us.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">5. Third-Party Services</h2>
+                    <p class="mb-4">We may employ third-party companies and individuals to facilitate our service, provide the service on our behalf, or assist us in analyzing how our service is used. These third parties have access to your data only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">6. Your Data Protection Rights</h2>
+                    <p class="mb-4">You have the right to:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>Request access to your personal data</li>
+                        <li>Request correction or deletion of your data</li>
+                        <li>Object to our use of your data</li>
+                        <li>Request restriction of processing your data</li>
+                        <li>Request transfer of your data</li>
+                        <li>Withdraw consent</li>
+                    </ul>
+                    <p>To exercise any of these rights, please contact us.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">7. Changes to This Privacy Policy</h2>
+                    <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">8. Contact Us</h2>
+                    <p>If you have any questions about this Privacy Policy, please contact @ <a href="mailto:starlited3vv@gmail.com" class="text-blue-600 hover:underline">starlited3vv@gmail.com</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-search text-white text-sm"></i>
+                        </div>
+                        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">Eoogle</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">The most advanced ECSR username lookup tool for Discord. Fast, reliable, and packed with features.</p>
+                    <div class="flex space-x-4 mt-6">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-discord text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Product</h4>
+                    <ul class="space-y-3">
+                        <li><a href="index.html#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a></li>
+                        <li><a href="index.html#why-cache" class="text-sm text-gray-400 hover:text-white transition-colors">Why We Cache</a></li>
+                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-span-2 md:col-span-1">
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal</h4>
+                    <ul class="space-y-3">
+                        <li><a href="privacy.html" class="text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="tos.html" class="text-sm text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-sm text-gray-500">© 2023 Eoogle. All rights reserved. Not affiliated with ECSR.</p>
+                <div class="mt-4 md:mt-0 flex items-center space-x-6">
+                    <button id="theme-toggle-footer" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Status</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeToggleFooter = document.getElementById('theme-toggle-footer');
+        
+        function toggleTheme() {
+            if (localStorage.theme === 'dark') {
+                localStorage.theme = 'light';
+                document.documentElement.classList.remove('dark');
+            } else {
+                localStorage.theme = 'dark';
+                document.documentElement.classList.add('dark');
+            }
+            updateThemeToggleIcons();
+        }
+        
+        function updateThemeToggleIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icons = document.querySelectorAll('.fa-moon, .fa-sun');
+            icons.forEach(icon => {
+                if (isDark) {
+                    icon.classList.toggle('hidden', icon.classList.contains('fa-moon'));
+                    icon.classList.toggle('block', icon.classList.contains('fa-sun'));
+                } else {
+                    icon.classList.toggle('block', icon.classList.contains('fa-moon'));
+                    icon.classList.toggle('hidden', icon.classList.contains('fa-sun'));
+                }
+            });
+        }
+        
+        // Initialize theme based on user preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        // Add event listeners for theme toggles
+        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+        if (themeToggleFooter) themeToggleFooter.addEventListener('click', toggleTheme);
+        
+        // Initialize theme toggle icons
+        updateThemeToggleIcons();
+        
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        if (mobileMenuButton) {
+            const mobileMenu = document.createElement('div');
+            mobileMenu.className = 'md:hidden hidden bg-white dark:bg-gray-800 shadow-lg absolute w-full z-50';
+            mobileMenu.innerHTML = `
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="index.html" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Home</a>
+                    <a href="index.html#features" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Features</a>
+                    <a href="index.html#why-cache" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Why We Cache</a>
+                    <a href="tos.html" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Terms</a>
+                    <div class="px-3 py-2">
+                        <button id="mobile-theme-toggle" class="w-full text-left px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center">
+                            <i class="fas fa-moon dark:hidden mr-2"></i>
+                            <i class="fas fa-sun hidden dark:block mr-2"></i>
+                            <span>Toggle Theme</span>
+                        </button>
+                    </div>
+                    <a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=0&scope=bot%20applications.commands" 
+                       class="block bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-md hover:opacity-90 mx-3 my-2 text-center">
+                        <i class="fab fa-discord mr-2"></i> Add to Discord
+                    </a>
+                </div>
+            `;
+            
+            let isMenuOpen = false;
+            
+            mobileMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isMenuOpen) {
+                    mobileMenu.remove();
+                } else {
+                    mobileMenuButton.parentNode.parentNode.appendChild(mobileMenu);
+                    mobileMenu.classList.remove('hidden');
+                    
+                    // Add event listener to mobile theme toggle button
+                    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+                    if (mobileThemeToggle) {
+                        mobileThemeToggle.addEventListener('click', toggleTheme);
+                    }
+                }
+                isMenuOpen = !isMenuOpen;
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mobileMenu.contains(e.target) && e.target !== mobileMenuButton) {
+                    mobileMenu.remove();
+                    isMenuOpen = false;
+                }
+            });
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Eoogle</title>
+    <link href="output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Check for saved theme preference or use system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50 backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-search text-white"></i>
+                        </div>
+                        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">Eoogle</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html#features" class="nav-link">Features</a>
+                    <a href="index.html#why-cache" class="nav-link">Why We Cache</a>
+                    <a href="privacy.html" class="nav-link">Privacy</a>
+                    <button id="theme-toggle" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1422001365101576303&permissions=8797166954496&integration_type=0&scope=bot" 
+                       class="btn-primary">
+                        <i class="fab fa-discord mr-2"></i> Add to Discord
+                    </a>
+                </div>
+                <div class="md:hidden">
+                    <button class="mobile-menu-button p-2 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
+            <p class="text-xl text-white/90 max-w-3xl mx-auto">Last updated: September 28, 2023</p>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden">
+            <div class="p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+            <div class="p-8">
+                <div class="flex items-center mb-8">
+                    <div class="p-3 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 mr-4">
+                        <i class="fas fa-file-contract text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Terms & Conditions</h2>
+                        <p class="text-gray-600 dark:text-gray-300">Please read these terms carefully before using our service.</p>
+                    </div>
+                </div>
+            
+            <div class="content prose dark:prose-invert prose-indigo dark:prose-dark max-w-none">
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">1. Acceptance of Terms</h2>
+                    <p>By using the Eoogle Discord bot ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Service.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">2. Description of Service</h2>
+                    <p>Eoogle is a Discord bot that provides ECSR username lookup and tracking services. The Service allows users to look up ECSR usernames, view name history, and track username changes.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">3. Use of the Service</h2>
+                    <p class="mb-4">You agree to use the Service only for lawful purposes and in accordance with these Terms. You agree not to use the Service:</p>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>In any way that violates any applicable federal, state, local, or international law or regulation</li>
+                        <li>To impersonate or attempt to impersonate Eoogle, an Eoogle employee, another user, or any other person or entity</li>
+                        <li>To engage in any other conduct that restricts or inhibits anyone's use or enjoyment of the Service</li>
+                        <li>To engage in any automated use of the system, such as using scripts to send messages</li>
+                    </ul>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">4. Intellectual Property Rights</h2>
+                    <p>The Service and its entire contents, features, and functionality (including but not limited to all information, software, text, displays, images, and the design, selection, and arrangement thereof) are owned by Eoogle, its licensors, or other providers of such material and are protected by copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">5. Disclaimer of Warranties</h2>
+                    <p>YOUR USE OF THE SERVICE IS AT YOUR OWN RISK. THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT ANY WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. NEITHER EOOGLE NOR ANY PERSON ASSOCIATED WITH EOOGLE MAKES ANY WARRANTY OR REPRESENTATION WITH RESPECT TO THE COMPLETENESS, SECURITY, RELIABILITY, QUALITY, ACCURACY, OR AVAILABILITY OF THE SERVICE.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">6. Limitation of Liability</h2>
+                    <p>IN NO EVENT WILL EOOGLE, ITS AFFILIATES, OR THEIR LICENSORS, SERVICE PROVIDERS, EMPLOYEES, AGENTS, OFFICERS, OR DIRECTORS BE LIABLE FOR DAMAGES OF ANY KIND, UNDER ANY LEGAL THEORY, ARISING OUT OF OR IN CONNECTION WITH YOUR USE, OR INABILITY TO USE, THE SERVICE, ANY WEBSITES LINKED TO IT, ANY CONTENT ON THE SERVICE OR SUCH OTHER WEBSITES, INCLUDING ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">7. Changes to the Terms of Service</h2>
+                    <p>We may revise and update these Terms of Service from time to time in our sole discretion. All changes are effective immediately when we post them. Your continued use of the Service following the posting of revised Terms of Service means that you accept and agree to the changes.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">8. Termination</h2>
+                    <p>We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach these Terms.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">9. Governing Law</h2>
+                    <p>These Terms shall be governed by and construed in accordance with the laws of Canada, without regard to its conflict of law provisions.</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">10. Contact Information</h2>
+                    <p>If you have any questions about these Terms, please contact us by joining our <a href="mailto:starlited3vv@gmail.com" class="text-blue-600 hover:underline">Discord server</a>.</p>
+                </div>
+
+                <div class="mt-12 pt-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-500">Eoogle is not affiliated with, maintained, sponsored, or endorsed by ECSR or any of its affiliates. All product and company names are the registered trademarks of their original owners.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-search text-white text-sm"></i>
+                        </div>
+                        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">Eoogle</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">The most advanced ECSR username lookup tool for Discord. Fast, reliable, and packed with features.</p>
+                    <div class="flex space-x-4 mt-6">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-discord text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Product</h4>
+                    <ul class="space-y-3">
+                        <li><a href="index.html#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a></li>
+                        <li><a href="index.html#why-cache" class="text-sm text-gray-400 hover:text-white transition-colors">Why We Cache</a></li>
+                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-span-2 md:col-span-1">
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal</h4>
+                    <ul class="space-y-3">
+                        <li><a href="privacy.html" class="text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="tos.html" class="text-sm text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-sm text-gray-500">© 2023 Eoogle. All rights reserved. Not affiliated with ECSR.</p>
+                <div class="mt-4 md:mt-0 flex items-center space-x-6">
+                    <button id="theme-toggle-footer" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Status</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeToggleFooter = document.getElementById('theme-toggle-footer');
+        
+        function toggleTheme() {
+            if (localStorage.theme === 'dark') {
+                localStorage.theme = 'light';
+                document.documentElement.classList.remove('dark');
+            } else {
+                localStorage.theme = 'dark';
+                document.documentElement.classList.add('dark');
+            }
+            updateThemeToggleIcons();
+        }
+        
+        function updateThemeToggleIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icons = document.querySelectorAll('.fa-moon, .fa-sun');
+            icons.forEach(icon => {
+                if (isDark) {
+                    icon.classList.toggle('hidden', icon.classList.contains('fa-moon'));
+                    icon.classList.toggle('block', icon.classList.contains('fa-sun'));
+                } else {
+                    icon.classList.toggle('block', icon.classList.contains('fa-moon'));
+                    icon.classList.toggle('hidden', icon.classList.contains('fa-sun'));
+                }
+            });
+        }
+        
+        // Initialize theme based on user preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        // Add event listeners for theme toggles
+        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+        if (themeToggleFooter) themeToggleFooter.addEventListener('click', toggleTheme);
+        
+        // Initialize theme toggle icons
+        updateThemeToggleIcons();
+        
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        if (mobileMenuButton) {
+            const mobileMenu = document.createElement('div');
+            mobileMenu.className = 'md:hidden hidden bg-white dark:bg-gray-800 shadow-lg absolute w-full z-50';
+            mobileMenu.innerHTML = `
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="index.html" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Home</a>
+                    <a href="index.html#features" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Features</a>
+                    <a href="index.html#why-cache" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Why We Cache</a>
+                    <a href="privacy.html" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Privacy</a>
+                    <div class="px-3 py-2">
+                        <button id="mobile-theme-toggle" class="w-full text-left px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center">
+                            <i class="fas fa-moon dark:hidden mr-2"></i>
+                            <i class="fas fa-sun hidden dark:block mr-2"></i>
+                            <span>Toggle Theme</span>
+                        </button>
+                    </div>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1422001365101576303&permissions=8797166954496&integration_type=0&scope=bot" 
+                       class="block bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-md hover:opacity-90 mx-3 my-2 text-center">
+                        <i class="fab fa-discord mr-2"></i> Add to Discord
+                    </a>
+                </div>
+            `;
+            
+            let isMenuOpen = false;
+            
+            mobileMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isMenuOpen) {
+                    mobileMenu.remove();
+                } else {
+                    mobileMenuButton.parentNode.parentNode.appendChild(mobileMenu);
+                    mobileMenu.classList.remove('hidden');
+                    
+                    // Add event listener to mobile theme toggle button
+                    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+                    if (mobileThemeToggle) {
+                        mobileThemeToggle.addEventListener('click', toggleTheme);
+                    }
+                }
+                isMenuOpen = !isMenuOpen;
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mobileMenu.contains(e.target) && e.target !== mobileMenuButton) {
+                    mobileMenu.remove();
+                    isMenuOpen = false;
+                }
+            });
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
