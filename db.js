@@ -87,17 +87,27 @@ function generateVerificationCode() {
     return `eoogle-${selected.join('-')}`;
 }
 
-function createVerification(discordId, ecsrId) {
+function createVerification(discordId, accountId, type = 'ecsr') {
     const db = readDB();
     const code = generateVerificationCode();
     
     if (!db.verifications) db.verifications = {};
     
     db.verifications[discordId] = {
-        ecsrId,
+        accountId,
+        type,
         code,
         expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
     };
+    
+    // If the account is already linked, update it
+    if (!db.users[discordId]) {
+        db.users[discordId] = {};
+    }
+    
+    // Store the account ID and type
+    db.users[discordId][type] = accountId;
+    db.users[discordId].type = type;
     
     writeDB(db);
     return code;
@@ -107,22 +117,59 @@ function checkVerification(discordId, aboutText) {
     const db = readDB();
     const verification = db.verifications?.[discordId];
     
-    if (!verification || verification.code !== aboutText) {
-        return null;
+    if (!verification || !aboutText) return { success: false };
+    
+    if (aboutText.includes(verification.code) && verification.expiresAt > Date.now()) {
+        // Link the account
+        if (!db.users) db.users = {};
+        if (!db.users[discordId]) db.users[discordId] = {};
+        
+        // Store the account ID in the appropriate field based on type
+        db.users[discordId][verification.type] = verification.accountId;
+        db.users[discordId].type = verification.type;
+        
+        delete db.verifications[discordId];
+        writeDB(db);
+        return { 
+            success: true, 
+            accountId: verification.accountId,
+            type: verification.type
+        };
     }
     
-    // Verification successful, return the ECSR ID
-    const ecsrId = verification.ecsrId;
+    // If verification is expired, clean it up
+    if (verification.expiresAt <= Date.now()) {
+        delete db.verifications[discordId];
+        writeDB(db);
+    }
     
-    // Clean up the verification
-    delete db.verifications[discordId];
-    writeDB(db);
-    
-    return ecsrId;
+    return { success: false };
 }
-function getLinkedAccount(discordId) {
+
+function getLinkedAccount(discordId, type = 'ecsr') {
     const db = readDB();
-    return db.users?.[discordId] || null;
+    if (!db.users || !db.users[discordId]) return null;
+    
+    // For backward compatibility with old format where users were stored directly by ID
+    if (typeof db.users[discordId] === 'string') {
+        // Migrate old format to new format
+        const oldId = db.users[discordId];
+        db.users[discordId] = {
+            ecsr: oldId,
+            type: 'ecsr'
+        };
+        writeDB(db);
+    }
+    
+    const userData = db.users[discordId];
+    
+    // If no type specified, return based on the user's current type
+    if (!type) {
+        return userData[userData.type] || null;
+    }
+    
+    // Return the specific type if it exists
+    return userData[type] || null;
 }
 
 function clearUsernameCache() {
@@ -139,7 +186,28 @@ function getCachedUsers() {
 
 function getLinkedUsers() {
     const db = readDB();
-    return db.users || {};
+    const linkedUsers = [];
+    
+    if (db.users) {
+        for (const [discordId, accounts] of Object.entries(db.users)) {
+            if (accounts.ecsr) {
+                linkedUsers.push({
+                    discordId,
+                    type: 'ecsr',
+                    userId: accounts.ecsr
+                });
+            }
+            if (accounts.korone) {
+                linkedUsers.push({
+                    discordId,
+                    type: 'korone',
+                    userId: accounts.korone
+                });
+            }
+        }
+    }
+    
+    return linkedUsers;
 }
 
 module.exports = {

@@ -3,6 +3,37 @@ const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBui
 const fetch = require('node-fetch');
 const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers } = require('./db');
 
+// Constants
+const USER_AGENT = 'Mozilla/5.0 (compatible; EoogleBot/1.0; contact owner at starlited3vv@gmail.com)';
+const fetchOptions = {
+    headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'application/json',
+    }
+};
+
+async function getFollowCounts(userId, revival = 'ecsr') {
+    const BASE_URL = revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL;
+    
+    try {
+        const [followersRes, followingsRes] = await Promise.all([
+            fetch(`${BASE_URL}/apisite/friends/v1/users/${userId}/followers/count`, fetchOptions),
+            fetch(`${BASE_URL}/apisite/friends/v1/users/${userId}/followings/count`, fetchOptions)
+        ]);
+        
+        const followersData = await followersRes.json();
+        const followingsData = await followingsRes.json();
+        
+        return {
+            followers: followersData.count || 0,
+            following: followingsData.count || 0
+        };
+    } catch (error) {
+        console.error(`Error fetching ${revival} follow counts:`, error);
+        return { followers: 'N/A', following: 'N/A' };
+    }
+}
+
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -11,7 +42,8 @@ const client = new Client({
     ]
 });
 
-const BASE_URL = 'https://ecsr.io';
+const ECSR_BASE_URL = 'https://ecsr.io';
+const KORONE_BASE_URL = 'https://www.pekora.zip';
 const EMOJIS = {
     banned: '<:banned:1422001984055283902>',
     admin: '<:admin:1422001963893264454>',
@@ -23,15 +55,23 @@ const EMOJIS = {
 
 const { cacheUsername } = require('./db');
 
-async function getUserInfo(userId) {
+async function getUserInfo(userId, revival = 'ecsr') {
+    const BASE_URL = revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL;
+    
     try {
         const [userRes, membershipRes, headshotRes] = await Promise.all([
-            fetch(`${BASE_URL}/apisite/users/v1/users/${userId}`),
-            fetch(`${BASE_URL}/apisite/premiumfeatures/v1/users/${userId}/validate-membership`),
-            fetch(`${BASE_URL}/apisite/thumbnails/v1/users/avatar-headshot?userIds=${userId}&size=420x420&format=png`)
+            fetch(`${BASE_URL}/apisite/users/v1/users/${userId}`, fetchOptions),
+            fetch(`${BASE_URL}/apisite/premiumfeatures/v1/users/${userId}/validate-membership`, fetchOptions),
+            fetch(`${BASE_URL}/apisite/thumbnails/v1/users/avatar-headshot?userIds=${userId}&size=420x420&format=png`, fetchOptions)
         ]);
+
+        // Check if any response is HTML (CAPTCHA page)
+        const userText = await userRes.text();
+        if (userText.trim().startsWith('<!DOCTYPE') || userText.trim().startsWith('<html')) {
+            throw new Error('CAPTCHA challenge detected. Please try again later.');
+        }
         
-        const user = await userRes.json();
+        const user = JSON.parse(userText);
         const membership = await membershipRes.json();
         const headshotData = await headshotRes.json();
         
@@ -40,24 +80,42 @@ async function getUserInfo(userId) {
         const headshotUrl = headshotEntry?.imageUrl ? `${BASE_URL}${headshotEntry.imageUrl}` : null;
         
         // Cache the username if we have a valid user
-        if (user && user.id && user.displayName) {
-            cacheUsername(user.id.toString(), user.displayName);
+        if (user && user.id && (user.displayName || user.name)) {
+            cacheUsername(user.id.toString(), user.displayName || user.name);
         }
         
-        return { user, membership, headshotUrl };
+        return { 
+            user: {
+                ...user,
+                // Normalize user object between ECSR and Korone
+                displayName: user.displayName || user.name,
+                isVerified: user.isVerified || user.hasVerifiedBadge || false,
+                isBanned: user.isBanned || false,
+                isStaff: user.isStaff || false,
+                placeVisits: user.placeVisits || 0,
+                forumPosts: user.forumPosts || 0
+            }, 
+            membership, 
+            headshotUrl 
+        };
     } catch (error) {
-        console.error('Error fetching user info:', error);
+        console.error(`Error fetching ${revival} user info:`, error);
+        if (error.message.includes('CAPTCHA')) {
+            throw error; // Re-throw CAPTCHA error to show a user-friendly message
+        }
         return null;
     }
 }
 
-async function getUsernameHistory(userId) {
+async function getUsernameHistory(userId, revival = 'ecsr') {
+    const BASE_URL = revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL;
+    
     try {
-        const res = await fetch(`${BASE_URL}/apisite/users/v1/users/${userId}/username-history?limit=1000`);
+        const res = await fetch(`${BASE_URL}/apisite/users/v1/users/${userId}/username-history?limit=1000`, fetchOptions);
         const data = await res.json();
         return data.data.map(entry => entry.name);
     } catch (error) {
-        console.error('Error fetching username history:', error);
+        console.error(`Error fetching ${revival} username history:`, error);
         return [];
     }
 }
@@ -179,7 +237,7 @@ client.on('messageCreate', async message => {
         }
 
         // Create verification code and store it
-        const code = createVerification(message.author.id, ecsrId);
+        const code = createVerification(message.author.id, ecsrId, 'ecsr');
         
         const row = new ActionRowBuilder()
             .addComponents(
@@ -200,6 +258,70 @@ client.on('messageCreate', async message => {
                 `*This code will expire in 24 hours*`
             )
             .setColor('#3498db');
+            
+        return message.channel.send({ 
+            content: `${message.author}`, 
+            embeds: [embed], 
+            components: [row] 
+        });
+    }
+    
+    if (command === 'koronelink') {
+        const koroneId = args[0];
+        
+        if (!koroneId) {
+            return message.reply('Please provide a Korone ID to link. Example: `!koronelink 1234567`');
+        }
+        
+        // Check if user already has a linked Korone account
+        const currentKoroneLink = getLinkedAccount(message.author.id, 'korone');
+        if (currentKoroneLink) {
+            return message.reply(`You already have a linked Korone account (ID: ${currentKoroneLink}). Use \`!unlink korone\` first if you want to link a different Korone account.`);
+        }
+        
+        // Check if this Korone ID is already linked to someone else
+        const db = readDB();
+        const existingUser = Object.entries(db.users || {}).find(([_, accounts]) => {
+            return accounts?.korone === koroneId;
+        });
+        if (existingUser) {
+            const [discordId] = existingUser;
+            return message.reply(`This Korone ID is already linked to <@${discordId}>`);
+        }
+        
+        // Check if the account is banned
+        try {
+            const userData = await getUserInfo(koroneId, 'korone');
+            if (userData?.user?.isBanned) {
+                return message.reply('❌ This Korone account is banned. I am unable to link to banned accounts.');
+            }
+        } catch (error) {
+            console.error('Error checking Korone account status:', error);
+            return message.reply('❌ An error occurred while checking the Korone account status. Please try again later.');
+        }
+
+        // Create verification code and store it with the raw Korone ID (no k_ prefix)
+        const code = createVerification(message.author.id, koroneId, 'korone');
+        
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('verify_korone_account')
+                    .setLabel('Verify Korone Account')
+                    .setStyle(ButtonStyle.Primary)
+            );
+            
+        const embed = new EmbedBuilder()
+            .setTitle('🔗 Link Your Korone Account')
+            .setDescription(
+                `To verify ownership of Korone ID **${koroneId}**, please follow these steps:\n\n` +
+                `1. Copy this code: \`${code}\`\n` +
+                `2. Go to your [Korone profile](${KORONE_BASE_URL}/users/${koroneId}/profile)\n` +
+                `3. Paste the code into your **About** section\n` +
+                `4. Click the button below to verify\n\n` +
+                `*This code will expire in 24 hours*`
+            )
+            .setColor('#9b59b6');
             
         return message.channel.send({ 
             content: `${message.author}`, 
@@ -484,18 +606,38 @@ client.on('messageCreate', async message => {
         }
     }
 
-    // For user and names commands, resolve the user ID first
+    // For ecsr, korone, ecsnames, and koronenames commands, resolve the user ID first
     let resolvedId;
+    let revival = command === 'korone' || command === 'koronenames' ? 'korone' : 'ecsr';
+    
     try {
-        if (command === 'user' || command === 'names') {
+        // Check if this is a revival-specific command
+        if (['ecsr', 'korone', 'ecsnames', 'koronenames'].includes(command)) {
+            // Force korone command to only use korone IDs
+            if (command === 'korone' && input) {
+                // If it's a mention, get the user's korone ID
+                if (message.mentions.users.size > 0) {
+                    const mentionedUserId = message.mentions.users.first().id;
+                    const koroneId = getLinkedAccount(mentionedUserId, 'korone');
+                    if (!koroneId) {
+                        return message.reply('This user does not have a linked Korone account.');
+                    }
+                    resolvedId = koroneId;
+                } else {
+                    // If it's a direct ID, use it as is
+                    resolvedId = input;
+                }
+            }
+            
             if (!input) {
                 // If no input, check if the author has a linked account
-                const linkedAccount = getLinkedAccount(message.author.id);
+                const linkedAccount = getLinkedAccount(message.author.id, revival);
                 if (!linkedAccount) {
-                    return message.reply('Please provide a user ID, mention, or link your account with `!link [ecsrid]`');
+                    return message.reply(`Please provide a user ID, mention, or link your account with \`!${revival === 'korone' ? 'koronelink' : 'link'} [${revival === 'korone' ? 'korone' : 'ecsr'}id]\``);
                 }
                 resolvedId = linkedAccount;
-            } else {
+            } else if (command !== 'korone') {
+                // Only use resolveUserId for non-korone commands
                 resolvedId = await resolveUserId(input, message) || input;
             }
         } else if (command !== 'help') {
@@ -506,15 +648,15 @@ client.on('messageCreate', async message => {
         return message.reply('An error occurred while processing your request.');
     }
 
-    if (command === 'user' && resolvedId) {
+    if ((['ecsr', 'korone'].includes(command)) && resolvedId) {
         try {
             // First check if the resolvedId is actually a username (not a number)
             if (isNaN(resolvedId)) {
-                // If it's not a number, it's a username that wasn't found in cache
                 return message.reply(`User "${resolvedId}" not found in cache. Please use the user ID instead.`);
             }
             
-            const data = await getUserInfo(resolvedId);
+            // Get user data
+            const data = await getUserInfo(resolvedId, command === 'korone' ? 'korone' : 'ecsr');
             if (!data) {
                 return message.reply('User not found or an error occurred.');
             }
@@ -529,53 +671,64 @@ client.on('messageCreate', async message => {
             const membershipBadge = getMembershipBadge(membership);
             if (membershipBadge) badges.push(membershipBadge);
             
-            // Find if this ECSR ID is linked to any Discord account
+            // Find if this user ID is linked to any Discord account
             const db = readDB();
-            const discordLink = Object.entries(db.users || {}).find(([_, id]) => id === user.id.toString());
+            const discordLink = Object.entries(db.users || {}).find(([_, accounts]) => {
+                return accounts[revival] === user.id.toString() || accounts[revival] === user.id;
+            });
             const linkedDiscord = discordLink ? `<@${discordLink[0]}>` : 'Nobody';
 
+            // Get follow counts
+            const { followers, following } = await getFollowCounts(user.id, command === 'korone' ? 'korone' : 'ecsr');
+            
             const embed = new EmbedBuilder()
                 .setColor('#0099ff')
                 .setTitle(`${user.displayName}${badges.length ? ' ' + badges.join(' ') : ''}`)
                 .setDescription(user.description || 'no description')
                 .addFields(
-                    { name: 'User ID', value: `[${user.id}](https://ecsr.io/users/${user.id}/profile)`, inline: true },
+                    { name: 'User ID', value: `[${user.id}](${revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL}/users/${user.id}/profile)`, inline: true },
                     { name: 'Created', value: new Date(user.created).toLocaleDateString(), inline: true },
-                    { name: 'Linked to', value: linkedDiscord, inline: true },
+                    { name: 'Followers', value: followers.toString(), inline: true },
+                    { name: 'Following', value: following.toString(), inline: true },
                     { name: 'Place Visits', value: user.placeVisits.toString(), inline: true },
-                    { name: 'Forum Posts', value: user.forumPosts.toString(), inline: true }
+                    { name: 'Forum Posts', value: user.forumPosts.toString(), inline: true },
+                    { name: 'Linked to', value: linkedDiscord, inline: true }
                 )
                 .setThumbnail(headshotUrl || '')
-                .setFooter({ text: 'Eoogle - User Information', iconURL: client.user.displayAvatarURL() })
+                .setFooter({ 
+                    text: `Eoogle - ${revival === 'korone' ? 'Korone' : 'ECSR'} User Information`, 
+                    iconURL: client.user.displayAvatarURL() 
+                })
                 .setTimestamp();
 
             message.channel.send({ embeds: [embed] });
-
         } catch (error) {
             console.error(error);
             message.reply('an error occurred while fetching user information.');
         }
-    } else if (command === 'names' && resolvedId) {
+    } else if ((command === 'ecsnames' || command === 'koronenames') && resolvedId) {
         try {
-            const usernameHistory = await getUsernameHistory(resolvedId);
+            const usernames = await getUsernameHistory(resolvedId, command === 'koronenames' ? 'korone' : 'ecsr');
             const embed = new EmbedBuilder()
                 .setColor('#0099ff')
                 .setTitle('Username History')
-                .setDescription(`Username history for user ID: ${resolvedId}`)
                 .addFields({
                     name: 'Previous Usernames',
-                    value: usernameHistory.length > 1 
-                        ? usernameHistory.slice(1).map(name => `• ${name}`).join('\n')
+                    value: usernames.length > 1 
+                        ? usernames.slice(1).map(name => `• ${name}`).join('\n')
                         : 'No previous usernames found',
                     inline: false
                 })
-                .setFooter({ text: 'Eoogle - Username History', iconURL: client.user.displayAvatarURL() })
+                .setFooter({ 
+                    text: `Eoogle - ${command === 'koronenames' ? 'Korone' : 'ECSR'} Username History`,
+                    iconURL: client.user.displayAvatarURL() 
+                })
                 .setTimestamp();
             
             message.channel.send({ embeds: [embed] });
         } catch (error) {
             console.error(error);
-            return message.reply('an error occurred while fetching username history.');
+            message.reply('an error occurred while fetching username history.');
         }
     }
     
@@ -642,15 +795,22 @@ client.on('messageCreate', async message => {
                     inline: false
                 },
                 {
-                    name: '🔍 User Commands',
-                    value: '`!user <userid|@mention>` - Get user info\n' +
-                           '`!names <userid|@mention>` - Get username history',
+                    name: '🔍 ECSR Commands',
+                    value: '`!ecsr <userid|@mention>` - Get ECSR user info\n' +
+                           '`!names <userid|@mention>` - Get ECSR username history\n',
+                    inline: false
+                },
+                {
+                    name: '🔍 Korone Commands',
+                    value: `\`!korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
+                           '`!koronenames <userid|@mention>` - Get Korone username history\n',
                     inline: false
                 },
                 {
                     name: '🔗 Account Linking',
                     value: '`!link <ecsrid>` - Link your Discord account to an ECSR ID\n' +
-                           '`!unlink` - Unlink your Discord account from an ECSR ID',
+                           '`!koronelink <koroneid>` - Link your Discord account to a Korone ID\n' +
+                           '`!unlink` - Unlink your Discord account',
                     inline: false
                 },
                 { 
@@ -668,26 +828,34 @@ client.on('messageCreate', async message => {
 
 // Handle verification button clicks
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isButton() || interaction.customId !== 'verify_account') return;
+    if (!interaction.isButton()) return;
+    
+    // Handle both ECSR and Korone verification buttons
+    if (interaction.customId !== 'verify_account' && interaction.customId !== 'verify_korone_account') return;
     
     await interaction.deferReply({ ephemeral: true });
     
     try {
         const discordId = interaction.user.id;
+        const isKorone = interaction.customId === 'verify_korone_account';
         
-        // Get the user's ECSR ID from verifications
+        // Get the user's verification data
         const db = readDB();
         const verification = db.verifications?.[discordId];
         
         if (!verification) {
+            const command = isKorone ? '!koronelink' : '!link';
             return interaction.followUp({ 
-                content: 'No active verification found. Please start the linking process again with `!link`.',
+                content: `No active verification found. Please start the linking process again with \`${command}\`.`,
                 ephemeral: true 
             });
         }
         
-        // Get the user's ECSR profile to check the about section
-        const userData = await getUserInfo(verification.ecsrId);
+        // Get the user's profile to check the about section
+        const userData = await getUserInfo(
+            verification.accountId.replace(/^k_/, ''), // Remove 'k_' prefix if present
+            verification.type === 'korone' ? 'korone' : 'ecsr'
+        );
         
         if (!userData || !userData.user) {
             return interaction.followUp({
@@ -697,21 +865,27 @@ client.on('interactionCreate', async interaction => {
         }
         
         // Check if the code is in the about section
+        const serviceName = verification.type === 'korone' ? 'Korone' : 'ECSR';
         if (!userData.user.description || !userData.user.description.includes(verification.code)) {
             return interaction.followUp({
-                content: '❌ Could not find the verification code in your ECSR profile\'s About section. Please make sure you\'ve added it exactly as shown.',
+                content: `❌ Could not find the verification code in your ${serviceName} profile's About section. Please make sure you've added it exactly as shown.`,
                 ephemeral: true
             });
         }
         
         // Verification successful, link the account
         if (!db.users) db.users = {};
-        db.users[discordId] = verification.ecsrId;
+        if (!db.users[discordId]) db.users[discordId] = {};
+        
+        // Store the account ID in the appropriate field based on type
+        db.users[discordId][verification.type] = verification.accountId;
         delete db.verifications[discordId];
         writeDB(db);
         
+        const displayId = verification.accountId.replace(/^k_/, '');
+        
         await interaction.followUp({
-            content: `✅ Successfully verified and linked your account to ECSR ID: ${verification.ecsrId} (${userData.user.displayName})`,
+            content: `✅ Successfully verified and linked your account to ${serviceName} ID: ${displayId} (${userData.user.displayName})`,
             ephemeral: true
         });
         
@@ -719,8 +893,8 @@ client.on('interactionCreate', async interaction => {
         const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
         if (originalMessage) {
             const embed = new EmbedBuilder()
-                .setTitle('✅ Account Linked Successfully')
-                .setDescription(`Your Discord account has been linked to ECSR ID: **${verification.ecsrId}** (${userData.user.displayName})`)
+                .setTitle(`✅ ${serviceName} Account Linked Successfully`)
+                .setDescription(`Your Discord account has been linked to ${serviceName} ID: **${displayId}** (${userData.user.displayName})`)
                 .setColor('#2ecc71');
                 
             await originalMessage.edit({ 
