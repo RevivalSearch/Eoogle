@@ -249,6 +249,26 @@ client.on('messageCreate', async message => {
     // Join remaining args with spaces to preserve usernames with spaces
     const input = args.join(' ').replace(/"/g, '').trim();
     
+    // Handle ping command
+    if (command === 'ping') {
+        const sent = await message.reply({ content: 'Pinging...', fetchReply: true });
+        const botLatency = sent.createdTimestamp - message.createdTimestamp;
+        const apiLatency = Math.round(client.ws.ping);
+        const messageLatency = Date.now() - message.createdTimestamp;
+        
+        const embed = new EmbedBuilder()
+            .setColor(0xFF0000)
+            .setTitle('🏓 Pong!')
+            .addFields(
+                { name: 'Bot Latency', value: `\`${botLatency}ms\``, inline: true },
+                { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
+                { name: 'Message Latency', value: `\`${messageLatency}ms\``, inline: true }
+            )
+            .setTimestamp();
+            
+        return sent.edit({ content: '', embeds: [embed] });
+    }
+    
     // Handle full body thumbnail commands
     if (command === 'ecsfullbody' || command === 'koronefullbody') {
         const revival = command === 'koronefullbody' ? 'korone' : 'ecsr';
@@ -943,25 +963,6 @@ client.on('messageCreate', async message => {
         return await Promise.all(batchPromises);
     }
 
-    
-    if (command === 'ping') {
-        const sent = await message.reply({ content: 'Pinging...', fetchReply: true });
-        const botLatency = sent.createdTimestamp - message.createdTimestamp;
-        const apiLatency = Math.round(client.ws.ping);
-        const messageLatency = Date.now() - message.createdTimestamp;
-        
-        const embed = new EmbedBuilder()
-            .setColor(0xFF0000) // Red color
-            .setTitle('🏓 Pong!')
-            .addFields(
-                { name: 'Bot Latency', value: `\`${botLatency}ms\``, inline: true },
-                { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
-                { name: 'Message Latency', value: `\`${messageLatency}ms\``, inline: true }
-            )
-            .setTimestamp();
-            
-        return sent.edit({ content: '', embeds: [embed] });
-    }
     
     if (command === 'help') {
         const helpEmbed = new EmbedBuilder()
