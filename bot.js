@@ -11,6 +11,7 @@ const EMOJIS = {
     verified: '<:verified:1422001945480134687>',
     obc: '<:OBC_Badge:1422001890878558280>',
     tbc: '<:TBC_Badge:1422001881336516729>',
+    premium: '<:premium:1423670642729025547>',
     bc: '<:BC_Badge:1422001868120260718>'
 };
 // Constants
@@ -162,6 +163,7 @@ function getMembershipBadge(membershipLevel) {
         case 1: return EMOJIS.bc;
         case 2: return EMOJIS.tbc;
         case 3: return EMOJIS.obc;
+         case 4: return EMOJIS.premium;
         default: return '';
     }
 }
@@ -190,28 +192,6 @@ function updatePresence() {
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     updatePresence();
-});
-
-// Ping command
-client.on('messageCreate', async message => {
-    if (message.content.toLowerCase() === '!ping') {
-        const sent = await message.reply({ content: 'Pinging...', fetchReply: true });
-        const botLatency = sent.createdTimestamp - message.createdTimestamp;
-        const apiLatency = Math.round(client.ws.ping);
-        const messageLatency = Date.now() - message.createdTimestamp;
-        
-        const embed = new EmbedBuilder()
-            .setColor(0xFF0000) // Red color
-            .setTitle('🏓 Pong!')
-            .addFields(
-                { name: 'Bot Latency', value: `\`${botLatency}ms\``, inline: true },
-                { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
-                { name: 'Message Latency', value: `\`${messageLatency}ms\``, inline: true }
-            )
-            .setTimestamp();
-            
-        await sent.edit({ content: '', embeds: [embed] });
-    }
 });
 
 async function resolveUserId(input, message) {
