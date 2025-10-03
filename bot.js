@@ -192,6 +192,28 @@ client.on('ready', () => {
     updatePresence();
 });
 
+// Ping command
+client.on('messageCreate', async message => {
+    if (message.content.toLowerCase() === '!ping') {
+        const sent = await message.reply({ content: 'Pinging...', fetchReply: true });
+        const botLatency = sent.createdTimestamp - message.createdTimestamp;
+        const apiLatency = Math.round(client.ws.ping);
+        const messageLatency = Date.now() - message.createdTimestamp;
+        
+        const embed = new EmbedBuilder()
+            .setColor(0xFF0000) // Red color
+            .setTitle('🏓 Pong!')
+            .addFields(
+                { name: 'Bot Latency', value: `\`${botLatency}ms\``, inline: true },
+                { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
+                { name: 'Message Latency', value: `\`${messageLatency}ms\``, inline: true }
+            )
+            .setTimestamp();
+            
+        await sent.edit({ content: '', embeds: [embed] });
+    }
+});
+
 async function resolveUserId(input, message) {
     // If input is empty, check if the author has a linked account
     if (!input) {
