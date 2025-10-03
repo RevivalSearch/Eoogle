@@ -1,8 +1,18 @@
 require('dotenv').config();
-const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const fetch = require('node-fetch');
 const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers } = require('./db');
 
+const ECSR_BASE_URL = 'https://ecsr.io';
+const KORONE_BASE_URL = 'https://www.pekora.zip';
+const EMOJIS = {
+    banned: '<:banned:1422001984055283902>',
+    admin: '<:admin:1422001963893264454>',
+    verified: '<:verified:1422001945480134687>',
+    obc: '<:OBC_Badge:1422001890878558280>',
+    tbc: '<:TBC_Badge:1422001881336516729>',
+    bc: '<:BC_Badge:1422001868120260718>'
+};
 // Constants
 const USER_AGENT = 'Mozilla/5.0 (compatible; EoogleBot/1.0; contact owner at starlited3vv@gmail.com)';
 const fetchOptions = {
@@ -42,16 +52,43 @@ const client = new Client({
     ]
 });
 
-const ECSR_BASE_URL = 'https://ecsr.io';
-const KORONE_BASE_URL = 'https://www.pekora.zip';
-const EMOJIS = {
-    banned: '<:banned:1422001984055283902>',
-    admin: '<:admin:1422001963893264454>',
-    verified: '<:verified:1422001945480134687>',
-    obc: '<:OBC_Badge:1422001890878558280>',
-    tbc: '<:TBC_Badge:1422001881336516729>',
-    bc: '<:BC_Badge:1422001868120260718>'
-};
+// Function to fetch collection data
+async function getCollectionItems(userId, revival = 'ecsr') {
+    const baseUrl = revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL;
+    const url = `${baseUrl}/users/profile/robloxcollections-json?userId=${userId}`;
+    
+    try {
+        const response = await fetch(url, fetchOptions);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        return data.CollectionsItems || [];
+    } catch (error) {
+        console.error(`Error fetching ${revival} collection:`, error);
+        return [];
+    }
+}
+
+// Function to fetch full body thumbnails
+async function getFullBodyThumbnails(userId, revival = 'ecsr') {
+    const baseUrl = revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL;
+    const endpoint = 'avatar'; // Both ECSR and Korone use 'avatar' endpoint
+    const url = `${baseUrl}/apisite/thumbnails/v1/users/${endpoint}?userIds=${userId}&size=420x420&format=png`;
+    
+    try {
+        const response = await fetch(url, fetchOptions);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        
+        if (data.data && data.data.length > 0 && data.data[0].imageUrl) {
+            const imagePath = data.data[0].imageUrl;
+            return imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`;
+        }
+        return null;
+    } catch (error) {
+        console.error(`Error fetching ${revival} full body thumbnail:`, error);
+        return null;
+    }
+}
 
 const { cacheUsername } = require('./db');
 
@@ -129,9 +166,30 @@ function getMembershipBadge(membershipLevel) {
     }
 }
 
+// Function to update the bot's presence
+function updatePresence() {
+    const activities = [
+        { name: '!help | Get help!', type: 'PLAYING' },
+        { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
+        { name: 'Eoogle, Google. No? !help', type: 'PLAYING' }
+    ];
+    
+    // Set initial activity
+    const activity = activities[0];
+    client.user.setActivity(activity.name, { type: activity.type });
+    
+    // Rotate activities every 15 seconds
+    let index = 1;
+    setInterval(() => {
+        const activity = activities[index];
+        client.user.setActivity(activity.name, { type: activity.type });
+        index = (index + 1) % activities.length;
+    }, 15000);
+}
+
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    client.user.setActivity('!help | Eoogle', { type: 'PLAYING' });
+    updatePresence();
 });
 
 async function resolveUserId(input, message) {
@@ -182,12 +240,56 @@ async function resolveUserId(input, message) {
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
     if (!message.content.startsWith('!')) return;
-
+    
     // Handle quoted usernames with spaces
-    const args = message.content.slice(1).trim().match(/\S+|\"[^\"]+\"/g) || [];
+    const args = message.content.slice(1).trim().match(/\S+|"[^"]+"/g) || [];
     const command = args.shift()?.toLowerCase() || '';
     // Join remaining args with spaces to preserve usernames with spaces
     const input = args.join(' ').replace(/"/g, '').trim();
+    
+    // Handle full body thumbnail commands
+    if (command === 'ecsfullbody' || command === 'koronefullbody') {
+        const revival = command === 'koronefullbody' ? 'korone' : 'ecsr';
+        const userId = input.trim();
+        
+        if (!userId) {
+            return message.reply(`❌ Please provide a user ID. Example: \`!${command} 1234\``);
+        }
+        
+        try {
+            const [imageUrl, userResponse] = await Promise.all([
+                getFullBodyThumbnails(userId, revival),
+                fetch(`${revival === 'korone' ? KORONE_BASE_URL : ECSR_BASE_URL}/apisite/users/v1/users/${userId}`, fetchOptions)
+            ]);
+            
+            if (!imageUrl) {
+                await message.reply('❌ Could not fetch full body thumbnail. The user may not exist or have an avatar.');
+                return;
+            }
+            
+            // Get username from the API response
+            let username = userId;
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                if (userData?.name) {
+                    username = userData.name;
+                }
+            }
+            
+            const embed = new EmbedBuilder()
+                .setColor(revival === 'korone' ? '#FFA500' : '#FF0000') // Orange for Korone, Red for ECSR
+                .setTitle(`🖼️ ${username}'s Full Body`)
+                .setImage(imageUrl)
+                .setFooter({ text: `User ID: ${userId}` });
+                
+            await message.channel.send({ embeds: [embed] });
+            
+        } catch (error) {
+            console.error('Error in fullbody command:', error);
+            message.reply('❌ An error occurred while fetching the full body thumbnail.');
+        }
+        return;
+    }
 
     if (command === 'unlink') {
         const db = readDB();
@@ -257,7 +359,7 @@ client.on('messageCreate', async message => {
                 `4. Click the button below to verify\n\n` +
                 `*This code will expire in 24 hours*`
             )
-            .setColor('#3498db');
+            .setColor('#ff0000');
             
         return message.channel.send({ 
             content: `${message.author}`, 
@@ -655,8 +757,48 @@ client.on('messageCreate', async message => {
                 return message.reply(`User "${resolvedId}" not found in cache. Please use the user ID instead.`);
             }
             
+            // Send loading embed with service logo
+            const isKorone = command === 'korone';
+            const placeholder = 'https://ecsr.io/img/placeholder.png';
+            
+            // Create a safe URL that won't throw validation errors
+            const serviceLogo = (() => {
+                try {
+                    const url = isKorone 
+                        ? 'https://www.pekora.zip/img/korone-icon-square1.png'
+                        : 'https://cdn.discordapp.com/icons/1138196552503021668/8cb9707fc19e52388ed31f15dc417a72.png';
+                    new URL(url); // This will throw if URL is invalid
+                    return url;
+                } catch {
+                    return placeholder;
+                }
+            })();
+            
+            const loadingEmbed = new EmbedBuilder()
+                .setColor(isKorone ? '#d97000' : '#ff0000')
+                .setAuthor({ 
+                    name: `Loading ${isKorone ? 'Korone' : 'ECSR'} Profile`,
+                    iconURL: serviceLogo || undefined // Fallback to undefined if empty
+                })
+                .setDescription(`Fetching data for ID: **${resolvedId}**`);
+                
+            const loadingMessage = await message.channel.send({ 
+                embeds: [loadingEmbed] 
+            });
+
+            // Add a 2-second delay to waste time
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             // Get user data
             const data = await getUserInfo(resolvedId, command === 'korone' ? 'korone' : 'ecsr');
+            
+            // Delete loading message
+            try {
+                await loadingMessage.delete();
+            } catch (error) {
+                console.error('Failed to delete loading message:', error);
+            }
+            
             if (!data) {
                 return message.reply('User not found or an error occurred.');
             }
@@ -670,6 +812,24 @@ client.on('messageCreate', async message => {
             if (user.isStaff) badges.push(EMOJIS.admin);
             const membershipBadge = getMembershipBadge(membership);
             if (membershipBadge) badges.push(membershipBadge);
+            
+            // Special users configuration per service
+            const specialUsers = {
+                'ecsr': [
+                    '3967', // ECSR user ID 1
+                    // Add more ECSR user IDs as needed
+                ],
+                'korone': [
+                    '5226', // Korone user ID 1
+                    // Add more Korone user IDs as needed
+                ]
+            };
+            
+            // Check if current user ID is in the special list for the current service
+            const currentService = command === 'korone' ? 'korone' : 'ecsr';
+            if (specialUsers[currentService]?.includes(user.id.toString())) {
+                badges.push('<:special:1423453449839710331>');
+            }
             
             // Find if this user ID is linked to any Discord account
             const db = readDB();
@@ -694,7 +854,7 @@ client.on('messageCreate', async message => {
                     { name: 'Forum Posts', value: user.forumPosts.toString(), inline: true },
                     { name: 'Linked to', value: linkedDiscord, inline: true }
                 )
-                .setThumbnail(headshotUrl || '')
+                .setThumbnail(headshotUrl || 'https://ecsr.io/img/placeholder.png')
                 .setFooter({ 
                     text: `Eoogle - ${revival === 'korone' ? 'Korone' : 'ECSR'} User Information`, 
                     iconURL: client.user.displayAvatarURL() 
@@ -781,6 +941,7 @@ client.on('messageCreate', async message => {
         return await Promise.all(batchPromises);
     }
 
+    
     if (command === 'help') {
         const helpEmbed = new EmbedBuilder()
             .setColor('#0099ff')
@@ -797,13 +958,15 @@ client.on('messageCreate', async message => {
                 {
                     name: '🔍 ECSR Commands',
                     value: '`!ecsr <userid|@mention>` - Get ECSR user info\n' +
-                           '`!names <userid|@mention>` - Get ECSR username history\n',
+                           '`!names <userid|@mention>` - Get ECSR username history\n' +
+                           '`!ecsfullbody <userid>` - Get ECSR full body thumbnail\n',
                     inline: false
                 },
                 {
                     name: '🔍 Korone Commands',
                     value: `\`!korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
-                           '`!koronenames <userid|@mention>` - Get Korone username history\n',
+                           '`!koronenames <userid|@mention>` - Get Korone username history\n' +
+                           '`!koronefullbody <userid>` - Get Korone full body thumbnail\n',
                     inline: false
                 },
                 {
