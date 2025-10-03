@@ -944,6 +944,25 @@ client.on('messageCreate', async message => {
     }
 
     
+    if (command === 'ping') {
+        const sent = await message.reply({ content: 'Pinging...', fetchReply: true });
+        const botLatency = sent.createdTimestamp - message.createdTimestamp;
+        const apiLatency = Math.round(client.ws.ping);
+        const messageLatency = Date.now() - message.createdTimestamp;
+        
+        const embed = new EmbedBuilder()
+            .setColor(0xFF0000) // Red color
+            .setTitle('🏓 Pong!')
+            .addFields(
+                { name: 'Bot Latency', value: `\`${botLatency}ms\``, inline: true },
+                { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
+                { name: 'Message Latency', value: `\`${messageLatency}ms\``, inline: true }
+            )
+            .setTimestamp();
+            
+        return sent.edit({ content: '', embeds: [embed] });
+    }
+    
     if (command === 'help') {
         const helpEmbed = new EmbedBuilder()
             .setColor('#0099ff')
