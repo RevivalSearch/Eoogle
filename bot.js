@@ -194,43 +194,6 @@ client.on('ready', () => {
     updatePresence();
 });
 
-// Korone status check command
-if (command === 'koronestatus') {
-    try {
-        const response = await fetch(KORONE_BASE_URL, {
-            method: 'GET',
-            headers: { 'User-Agent': USER_AGENT }
-        });
-        
-        const responseText = await response.text();
-        const isDown = responseText.includes('site is currently down');
-        
-        const embed = new EmbedBuilder()
-            .setTitle('🌐 Korone Status')
-            .setDescription(isDown ? '❌ Korone website is currently down!' : '✅ Korone website is up and running!')
-            .addFields(
-                { name: 'Status Code', value: response.status.toString(), inline: true },
-                { name: 'Status', value: isDown ? 'Down' : 'Online', inline: true }
-            )
-            .setColor(isDown ? '#FF0000' : '#00FF00')
-            .setTimestamp();
-            
-        await message.reply({ embeds: [embed] });
-    } catch (error) {
-        console.error('Error checking Korone status:', error);
-        const embed = new EmbedBuilder()
-            .setTitle('❌ Error')
-            .setDescription('Failed to check Korone status. The website might be down or unreachable.')
-            .setColor('#FF0000')
-            .addFields(
-                { name: 'Error', value: error.message || 'Unknown error occurred' }
-            )
-            .setTimestamp();
-        await message.reply({ embeds: [embed] });
-    }
-    return;
-}
-
 async function resolveUserId(input, message) {
     // If input is empty, check if the author has a linked account
     if (!input) {
@@ -304,6 +267,42 @@ client.on('messageCreate', async message => {
             .setTimestamp();
             
         return sent.edit({ content: '', embeds: [embed] });
+    }
+    
+    // Handle koronestatus command
+    if (command === 'koronestatus') {
+        try {
+            const response = await fetch(KORONE_BASE_URL, {
+                method: 'GET',
+                headers: { 'User-Agent': USER_AGENT }
+            });
+            
+            const responseText = await response.text();
+            const isDown = responseText.includes('site is currently down');
+            
+            const embed = new EmbedBuilder()
+                .setTitle('🌐 Korone Status')
+                .setDescription(isDown ? '❌ Korone website is currently down!' : '✅ Korone website is up and running!')
+                .addFields(
+                    { name: 'Status Code', value: response.status.toString(), inline: true },
+                    { name: 'Status', value: isDown ? 'Down' : 'Online', inline: true }
+                )
+                .setColor(isDown ? '#FF0000' : '#00FF00')
+                .setTimestamp();
+                
+            return message.reply({ embeds: [embed] });
+        } catch (error) {
+            console.error('Error checking Korone status:', error);
+            const embed = new EmbedBuilder()
+                .setTitle('❌ Error')
+                .setDescription('Failed to check Korone status. The website might be down or unreachable.')
+                .setColor('#FF0000')
+                .addFields(
+                    { name: 'Error', value: error.message || 'Unknown error occurred' }
+                )
+                .setTimestamp();
+            return message.reply({ embeds: [embed] });
+        }
     }
     
     // Handle full body thumbnail commands
