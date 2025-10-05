@@ -171,9 +171,9 @@ function getMembershipBadge(membershipLevel) {
 // Function to update the bot's presence
 function updatePresence() {
     const activities = [
-        { name: '!help | Get help!', type: 'PLAYING' },
+        { name: 'e-help | Get help!', type: 'PLAYING' },
         { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
-        { name: 'Eoogle, Google. No? !help', type: 'PLAYING' }
+        { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' }
     ];
     
     // Set initial activity
@@ -241,10 +241,10 @@ async function resolveUserId(input, message) {
 
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
-    if (!message.content.startsWith('!')) return;
+    if (!message.content.startsWith('e-')) return;
     
     // Handle quoted usernames with spaces
-    const args = message.content.slice(1).trim().match(/\S+|"[^"]+"/g) || [];
+    const args = message.content.slice(2).trim().match(/\S+|"[^"]+"/g) || [];
     const command = args.shift()?.toLowerCase() || '';
     // Join remaining args with spaces to preserve usernames with spaces
     const input = args.join(' ').replace(/"/g, '').trim();
@@ -311,7 +311,7 @@ client.on('messageCreate', async message => {
         const userId = input.trim();
         
         if (!userId) {
-            return message.reply(`❌ Please provide a user ID. Example: \`!${command} 1234\``);
+            return message.reply(`❌ Please provide a user ID. Example: \`e-${command} 1234\``);
         }
         
         try {
@@ -368,13 +368,13 @@ client.on('messageCreate', async message => {
         const ecsrId = args[0];
         
         if (!ecsrId) {
-            return message.reply('Please provide an ECSR ID to link. Example: `!link 1234567`');
+            return message.reply('Please provide an ECSR ID to link. Example: `e-link 1234567`');
         }
         
         // Check if user already has a linked account
         const currentLink = getLinkedAccount(message.author.id);
         if (currentLink) {
-            return message.reply(`You already have a linked ECSR account (ID: ${currentLink}). Use \`!unlink\` first if you want to link a different account.`);
+            return message.reply(`You already have a linked ECSR account (ID: ${currentLink}). Use \`e-unlink\` first if you want to link a different account.`);
         }
         
         // Check if this ECSR ID is already linked to someone else
@@ -430,13 +430,13 @@ client.on('messageCreate', async message => {
         const koroneId = args[0];
         
         if (!koroneId) {
-            return message.reply('Please provide a Korone ID to link. Example: `!koronelink 1234567`');
+            return message.reply('Please provide a Korone ID to link. Example: `e-koronelink 1234567`');
         }
         
         // Check if user already has a linked Korone account
         const currentKoroneLink = getLinkedAccount(message.author.id, 'korone');
         if (currentKoroneLink) {
-            return message.reply(`You already have a linked Korone account (ID: ${currentKoroneLink}). Use \`!unlink korone\` first if you want to link a different Korone account.`);
+            return message.reply(`You already have a linked Korone account (ID: ${currentKoroneLink}). Use \`e-unlink korone\` first if you want to link a different Korone account.`);
         }
         
         // Check if this Korone ID is already linked to someone else
@@ -680,7 +680,7 @@ client.on('messageCreate', async message => {
         if (command === 'cacheusers') {
             const rangeMatch = input.match(/(\d+)\s*-\s*(\d+)/);
             if (!rangeMatch) {
-                return message.reply('Please provide a valid range. Example: `!cacheusers 1-100`');
+                return message.reply('Please provide a valid range. Example: `e-cacheusers 1-100`');
             }
             
             const start = parseInt(rangeMatch[1]);
@@ -793,7 +793,7 @@ client.on('messageCreate', async message => {
                 // If no input, check if the author has a linked account
                 const linkedAccount = getLinkedAccount(message.author.id, revival);
                 if (!linkedAccount) {
-                    return message.reply(`Please provide a user ID, mention, or link your account with \`!${revival === 'korone' ? 'koronelink' : 'link'} [${revival === 'korone' ? 'korone' : 'ecsr'}id]\``);
+                    return message.reply(`Please provide a user ID, mention, or link your account with \`e-${revival === 'korone' ? 'koronelink' : 'link'} [${revival === 'korone' ? 'korone' : 'ecsr'}id]\``);
                 }
                 resolvedId = linkedAccount;
             } else if (command !== 'korone') {
@@ -1004,39 +1004,39 @@ client.on('messageCreate', async message => {
         const helpEmbed = new EmbedBuilder()
             .setColor('#0099ff')
             .setTitle('Eoogle Bot Commands')
-            .setDescription('prefix: `!`')
+            .setDescription('prefix: `e-`')
             .addFields(
                 { 
                     name: 'Admin Commands',
-                    value: '`!deletecache` - Delete username cache\n' +
-                           '`!cachedusers` - List cached users\n' +
-                           '`!linkedusers` - List linked users',
+                    value: '`e-deletecache` - Delete username cache\n' +
+                           '`e-cachedusers` - List cached users\n' +
+                           '`e-linkedusers` - List linked users',
                     inline: false
                 },
                 {
                     name: '🔍 ECSR Commands',
-                    value: '`!ecsr <userid|@mention>` - Get ECSR user info\n' +
-                           '`!names <userid|@mention>` - Get ECSR username history\n' +
-                           '`!ecsfullbody <userid>` - Get ECSR full body thumbnail\n',
+                    value: '`e-ecsr <userid|@mention>` - Get ECSR user info\n' +
+                           '`e-names <userid|@mention>` - Get ECSR username history\n' +
+                           '`e-ecsfullbody <userid>` - Get ECSR full body thumbnail\n',
                     inline: false
                 },
                 {
                     name: '🔍 Korone Commands',
-                    value: `\`!korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
-                           '`!koronenames <userid|@mention>` - Get Korone username history\n' +
-                           '`!koronefullbody <userid>` - Get Korone full body thumbnail\n',
+                    value: `\`e-korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
+                           '`e-koronenames <userid|@mention>` - Get Korone username history\n' +
+                           '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n',
                     inline: false
                 },
                 {
                     name: '🔗 Account Linking',
-                    value: '`!link <ecsrid>` - Link your Discord account to an ECSR ID\n' +
-                           '`!koronelink <koroneid>` - Link your Discord account to a Korone ID\n' +
-                           '`!unlink` - Unlink your Discord account',
+                    value: '`e-link <ecsrid>` - Link your Discord account to an ECSR ID\n' +
+                           '`e-koronelink <koroneid>` - Link your Discord account to a Korone ID\n' +
+                           '`e-unlink` - Unlink your Discord account',
                     inline: false
                 },
                 { 
                     name: '❓ Help',
-                    value: '`!help` - Show this help message',
+                    value: '`e-help` - Show this help message',
                     inline: false
                 }
             )
@@ -1065,7 +1065,7 @@ client.on('interactionCreate', async interaction => {
         const verification = db.verifications?.[discordId];
         
         if (!verification) {
-            const command = isKorone ? '!koronelink' : '!link';
+            const command = isKorone ? 'e-koronelink' : 'e-link';
             return interaction.followUp({ 
                 content: `No active verification found. Please start the linking process again with \`${command}\`.`,
                 ephemeral: true 
