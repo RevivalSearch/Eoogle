@@ -247,7 +247,7 @@ async function checkGitHubCommits() {
                 
                 const embed = new EmbedBuilder()
                     .setTitle(`📝 New ${chunk.length > 1 ? 'Commits' : 'Commit'} to Eoogle`)
-                    .setURL('https://github.com/RevivalSearch/Eoogle/commits/main')
+                    .setURL('https://github.com/RevivalSearch/Eoogle/commits/master')
                     .setColor('#2ecc71')
                     .setFooter({ text: 'These updates are not immediate, They will be pushed to the server.', iconURL: client.user.displayAvatarURL() })
                     .setTimestamp();
