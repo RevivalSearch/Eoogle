@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const fetch = require('node-fetch');
-let Octokit;
+const https = require('https');
 const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers } = require('./db');
 
 const ECSR_BASE_URL = 'https://ecsr.io';
@@ -171,32 +171,41 @@ function getMembershipBadge(membershipLevel) {
 
 // GitHub commit checker
 let lastCheckedCommit = null;
-let octokitInitialized = false;
-
-async function initializeOctokit() {
-    if (!octokitInitialized) {
-        try {
-            const octokitModule = await import('@octokit/rest');
-            Octokit = octokitModule.Octokit;
-            octokitInitialized = true;
-        } catch (error) {
-            console.error('Failed to initialize Octokit:', error);
-            return false;
-        }
-    }
-    return true;
-}
 
 async function checkGitHubCommits() {
-    if (!await initializeOctokit()) return;
     try {
-        const octokit = new Octokit({
-            userAgent: 'EoogleBot/1.0.0'
-        });
-        const { data: commits } = await octokit.rest.repos.listCommits({
-            owner: 'RevivalSearch',
-            repo: 'Eoogle',
-            per_page: 5, // Get the 5 most recent commits
+        // Simple GitHub API request using native https
+        const options = {
+            hostname: 'api.github.com',
+            path: '/repos/RevivalSearch/Eoogle/commits?per_page=5',
+            headers: {
+                'User-Agent': 'EoogleBot/1.0.0',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        };
+
+        // Make the request
+        const commits = await new Promise((resolve, reject) => {
+            const req = https.get(options, (res) => {
+                let data = '';
+                
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    if (res.statusCode >= 400) {
+                        return reject(new Error(`GitHub API error: ${res.statusCode} - ${data}`));
+                    }
+                    resolve(JSON.parse(data));
+                });
+            });
+
+            req.on('error', (error) => {
+                reject(error);
+            });
+
+            req.end();
         });
 
         // If we haven't checked before, just store the latest commit and return
@@ -230,17 +239,18 @@ async function checkGitHubCommits() {
                     .setColor('#2ecc71')
                     .setTimestamp();
 
-                chunk.forEach(commit => {
+                for (const commit of chunk) {
                     const commitUrl = `https://github.com/RevivalSearch/Eoogle/commit/${commit.sha}`;
-                    const shortMessage = commit.commit.message.split('\n')[0].substring(0, 100);
-                    const author = commit.commit.author || {};
+                    const commitMessage = commit.commit?.message || 'No commit message';
+                    const shortMessage = commitMessage.split('\n')[0].substring(0, 100);
+                    const author = commit.commit?.author || {};
                     
                     embed.addFields({
                         name: `\`${commit.sha.substring(0, 7)}\` ${shortMessage}`,
                         value: `By: ${author.name || 'Unknown'} • [View Commit](${commitUrl})`,
                         inline: false
                     });
-                });
+                }
 
                 await channel.send({ embeds: [embed] }).catch(console.error);
             }
