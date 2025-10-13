@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const fetch = require('node-fetch');
+let Octokit;
 const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers } = require('./db');
 
 const ECSR_BASE_URL = 'https://ecsr.io';
@@ -168,6 +169,87 @@ function getMembershipBadge(membershipLevel) {
     }
 }
 
+// GitHub commit checker
+let lastCheckedCommit = null;
+let octokitInitialized = false;
+
+async function initializeOctokit() {
+    if (!octokitInitialized) {
+        try {
+            const octokitModule = await import('@octokit/rest');
+            Octokit = octokitModule.Octokit;
+            octokitInitialized = true;
+        } catch (error) {
+            console.error('Failed to initialize Octokit:', error);
+            return false;
+        }
+    }
+    return true;
+}
+
+async function checkGitHubCommits() {
+    if (!await initializeOctokit()) return;
+    try {
+        const octokit = new Octokit({
+            userAgent: 'EoogleBot/1.0.0'
+        });
+        const { data: commits } = await octokit.rest.repos.listCommits({
+            owner: 'RevivalSearch',
+            repo: 'Eoogle',
+            per_page: 5, // Get the 5 most recent commits
+        });
+
+        // If we haven't checked before, just store the latest commit and return
+        if (!lastCheckedCommit) {
+            lastCheckedCommit = commits[0].sha;
+            return;
+        }
+
+        // Find new commits since last check
+        const newCommits = [];
+        for (const commit of commits) {
+            if (commit.sha === lastCheckedCommit) break;
+            newCommits.push(commit);
+        }
+
+        // If there are new commits, send them to the channel
+        if (newCommits.length > 0) {
+            lastCheckedCommit = newCommits[0].sha; // Update to the latest commit
+            
+            const channel = await client.channels.fetch('1424094195307647126').catch(console.error);
+            if (!channel) return;
+
+            // Split commits into chunks of 5 to avoid hitting embed limits
+            const chunkSize = 5;
+            for (let i = 0; i < newCommits.length; i += chunkSize) {
+                const chunk = newCommits.slice(i, i + chunkSize);
+                
+                const embed = new EmbedBuilder()
+                    .setTitle(`📝 New ${chunk.length > 1 ? 'Commits' : 'Commit'} to Eoogle`)
+                    .setURL('https://github.com/RevivalSearch/Eoogle/commits/main')
+                    .setColor('#2ecc71')
+                    .setTimestamp();
+
+                chunk.forEach(commit => {
+                    const commitUrl = `https://github.com/RevivalSearch/Eoogle/commit/${commit.sha}`;
+                    const shortMessage = commit.commit.message.split('\n')[0].substring(0, 100);
+                    const author = commit.commit.author || {};
+                    
+                    embed.addFields({
+                        name: `\`${commit.sha.substring(0, 7)}\` ${shortMessage}`,
+                        value: `By: ${author.name || 'Unknown'} • [View Commit](${commitUrl})`,
+                        inline: false
+                    });
+                });
+
+                await channel.send({ embeds: [embed] }).catch(console.error);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking GitHub commits:', error);
+    }
+}
+
 // Function to update the bot's presence
 async function sendRenewalReminder() {
     try {
@@ -184,7 +266,7 @@ async function sendRenewalReminder() {
             .setDescription('Don\'t forget to renew the bot!')
             .setColor('#FFA500')
             .addFields(
-                { name: 'Renewal Link', value: '[Click here to renew](https://panel.fps.ms/server/861cb090-7573-4e5d-a6c2-7e476fe1c19d)' }
+                { name: 'Renewal Link', value: '[Click here to renew](https://panel.fps.ms/server/861cb090)' }
             )
             .setTimestamp();
         
@@ -245,6 +327,12 @@ client.on('ready', async () => {
     } catch (error) {
         console.error('Failed to set initial presence:', error);
     }
+    
+    // Initial GitHub commit check
+    await checkGitHubCommits();
+    
+    // Check for new commits every 5 minutes
+    setInterval(checkGitHubCommits, 5 * 60 * 1000);
     
     // Start presence updates
     updatePresence();
