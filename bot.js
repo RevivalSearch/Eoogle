@@ -175,13 +175,20 @@ let lastCheckedCommit = null;
 async function checkGitHubCommits() {
     try {
         // Simple GitHub API request using native https
+        const headers = {
+            'User-Agent': 'EoogleBot/1.0.0',
+            'Accept': 'application/vnd.github.v3+json'
+        };
+        
+        if (lastCheckedCommit) {
+            headers['If-None-Match'] = `"${lastCheckedCommit}"`;
+            headers['If-Modified-Since'] = new Date(Date.now() - 60000).toUTCString();
+        }
+        
         const options = {
             hostname: 'api.github.com',
-            path: '/repos/RevivalSearch/Eoogle/commits?per_page=5',
-            headers: {
-                'User-Agent': 'EoogleBot/1.0.0',
-                'Accept': 'application/vnd.github.v3+json'
-            }
+            path: '/repos/RevivalSearch/Eoogle/commits?sha=master&per_page=5',
+            headers: headers
         };
 
         // Make the request
@@ -341,8 +348,11 @@ client.on('ready', async () => {
     // Initial GitHub commit check
     await checkGitHubCommits();
     
-    // Check for new commits every 5 minutes
-    setInterval(checkGitHubCommits, 5 * 60 * 1000);
+    // Check for new commits every 30 seconds
+    setInterval(checkGitHubCommits, 30 * 1000);
+    
+    // Also check immediately on startup
+    checkGitHubCommits();
     
     // Start presence updates
     updatePresence();
