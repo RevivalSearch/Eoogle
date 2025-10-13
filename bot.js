@@ -180,6 +180,11 @@ async function checkGitHubCommits() {
             'Accept': 'application/vnd.github.v3+json'
         };
         
+        // Add GitHub token if available for higher rate limits
+        if (process.env.GITHUB_TOKEN) {
+            headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+        }
+        
         if (lastCheckedCommit) {
             headers['If-None-Match'] = `"${lastCheckedCommit}"`;
             headers['If-Modified-Since'] = new Date(Date.now() - 60000).toUTCString();
