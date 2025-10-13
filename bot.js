@@ -169,29 +169,57 @@ function getMembershipBadge(membershipLevel) {
 }
 
 // Function to update the bot's presence
-function updatePresence() {
-    const activities = [
-        { name: 'e-help | Get help!', type: 'PLAYING' },
-        { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
-        { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' }
-    ];
-    
-    // Set initial activity
-    const activity = activities[0];
-    client.user.setActivity(activity.name, { type: activity.type });
-    
-    // Rotate activities every 15 seconds
-    let index = 1;
-    setInterval(() => {
-        const activity = activities[index];
-        client.user.setActivity(activity.name, { type: activity.type });
-        index = (index + 1) % activities.length;
-    }, 15000);
+async function sendRenewalReminder() {
+    try {
+        const userId = '1422001365101576303';
+        const user = await client.users.fetch(userId);
+        const embed = new EmbedBuilder()
+            .setTitle('⏰ Renewal Reminder')
+            .setDescription('Don\'t forget to renew the bot!')
+            .setColor('#FFA500')
+            .addFields(
+                { name: 'Renewal Link', value: '[Click here to renew](https://panel.fps.ms/server/861cb090-7573-4e5d-a6c2-7e476fe1c19d)' }
+            )
+            .setTimestamp();
+        
+        await user.send({ embeds: [embed] });
+        console.log('Sent renewal reminder DM to', user.tag);
+    } catch (error) {
+        console.error('Failed to send renewal reminder:', error);
+    }
 }
 
-client.on('ready', () => {
+function updatePresence() {
+    // Set initial presence
+    updateActivity();
+    
+    // Update presence every 15 seconds
+    setInterval(updateActivity, 15000);
+    
+    function updateActivity() {
+        const activities = [
+            { name: 'e-help | Get help!', type: 'PLAYING' },
+            { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
+            { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' },
+            { name: 'Jee, I hope the owner of Eoogle is gonna renew me!', type: 'PLAYING' }
+        ];
+        
+        const activity = activities[Math.floor(Math.random() * activities.length)];
+        
+        client.user.setPresence({
+            activities: [{
+                name: activity.name,
+                type: activity.type
+            }],
+            status: 'online'
+        }).catch(console.error);
+    }
+}
+
+client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
     updatePresence();
+    await sendRenewalReminder();
 });
 
 async function resolveUserId(input, message) {
