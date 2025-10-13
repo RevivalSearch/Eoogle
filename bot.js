@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const fetch = require('node-fetch');
 const https = require('https');
-const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers } = require('./db');
+const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers, unlinkAccount } = require('./db');
 
 const ECSR_BASE_URL = 'https://ecsr.io';
 const KORONE_BASE_URL = 'https://www.pekora.zip';
@@ -838,14 +838,14 @@ client.on('messageCreate', async message => {
         
         if (command === 'linkedusers') {
             const linkedUsers = getLinkedUsers();
-            const userList = Object.entries(linkedUsers)
-                .map(([discordId, ecsrId]) => `• <@${discordId}> → \`${ecsrId}\``)
+            const userList = linkedUsers
+                .map(user => `• <@${user.discordId}> → \`${user.userId}\` (${user.type})`)
                 .join('\n') || 'No linked users.';
                 
             const embed = new EmbedBuilder()
                 .setColor('#9b59b6')
                 .setTitle('🔗 Linked Accounts')
-                .setDescription(`**Total Linked:** ${Object.keys(linkedUsers).length}`)
+                .setDescription(`**Total Linked:** ${linkedUsers.length}`)
                 .addFields({
                     name: 'Linked Users',
                     value: userList.length > 1800 ? 'Too many linked users to display.' : userList,
@@ -857,6 +857,44 @@ client.on('messageCreate', async message => {
                 await dmChannel.send({ embeds: [embed] });
             } catch (error) {
                 console.error('Failed to send DM:', error);
+            }
+        }
+        
+        if (command === 'unlinkuser') {
+            const args = input.split(/\s+/);
+            if (args.length < 2) {
+                return message.reply('Usage: `e-unlinkuser <discord_user_id> [type]`\nExample: `e-unlinkuser 123456789` or `e-unlinkuser 123456789 ecsr`');
+            }
+            
+            const targetUserId = args[1];
+            const accountType = args[2] ? args[2].toLowerCase() : null;
+            
+            // Validate type if provided
+            if (accountType && accountType !== 'ecsr' && accountType !== 'korone') {
+                return message.reply('Invalid account type. Must be `ecsr` or `korone`.');
+            }
+            
+            const result = unlinkAccount(targetUserId, accountType);
+            
+            if (!result.success) {
+                return message.reply(`❌ ${result.message}`);
+            }
+            
+            const embed = new EmbedBuilder()
+                .setColor('#e74c3c')
+                .setTitle('🔓 Account Unlinked')
+                .setDescription(`Successfully unlinked account(s) for <@${targetUserId}>`)
+                .addFields({
+                    name: 'Details',
+                    value: result.message,
+                    inline: false
+                })
+                .setTimestamp();
+            
+            try {
+                await message.reply({ embeds: [embed] });
+            } catch (error) {
+                console.error('Failed to send unlink confirmation:', error);
             }
         }
         
@@ -1193,7 +1231,8 @@ client.on('messageCreate', async message => {
                     name: 'Admin Commands',
                     value: '`e-deletecache` - Delete username cache\n' +
                            '`e-cachedusers` - List cached users\n' +
-                           '`e-linkedusers` - List linked users',
+                           '`e-linkedusers` - List linked users\n' +
+                           '`e-unlinkuser <user_id> [type]` - Unlink a user\'s account',
                     inline: false
                 },
                 {
@@ -1255,56 +1294,109 @@ client.on('interactionCreate', async interaction => {
             });
         }
         
-        // Get the user's profile to check the about section
-        const userData = await getUserInfo(
-            verification.accountId.replace(/^k_/, ''), // Remove 'k_' prefix if present
-            verification.type === 'korone' ? 'korone' : 'ecsr'
-        );
-        
-        if (!userData || !userData.user) {
-            return interaction.followUp({
-                content: '❌ Could not verify your ECSR account. Please try again later.',
-                ephemeral: true
-            });
-        }
-        
-        // Check if the code is in the about section
-        const serviceName = verification.type === 'korone' ? 'Korone' : 'ECSR';
-        if (!userData.user.description || !userData.user.description.includes(verification.code)) {
-            return interaction.followUp({
-                content: `❌ Could not find the verification code in your ${serviceName} profile's About section. Please make sure you've added it exactly as shown.`,
-                ephemeral: true
-            });
-        }
-        
-        // Verification successful, link the account
-        if (!db.users) db.users = {};
-        if (!db.users[discordId]) db.users[discordId] = {};
-        
-        // Store the account ID in the appropriate field based on type
-        db.users[discordId][verification.type] = verification.accountId;
-        delete db.verifications[discordId];
-        writeDB(db);
-        
-        const displayId = verification.accountId.replace(/^k_/, '');
-        
-        await interaction.followUp({
-            content: `✅ Successfully verified and linked your account to ${serviceName} ID: ${displayId} (${userData.user.displayName})`,
-            ephemeral: true
-        });
-        
-        // Update the original message to remove the button
-        const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
-        if (originalMessage) {
-            const embed = new EmbedBuilder()
-                .setTitle(`✅ ${serviceName} Account Linked Successfully`)
-                .setDescription(`Your Discord account has been linked to ${serviceName} ID: **${displayId}** (${userData.user.displayName})`)
-                .setColor('#2ecc71');
+        try {
+            // Get the user's profile to check the about section
+            const userData = await getUserInfo(
+                verification.accountId.replace(/^k_/, ''), // Remove 'k_' prefix if present
+                verification.type === 'korone' ? 'korone' : 'ecsr'
+            );
+            
+            if (!userData || !userData.user) {
+                return interaction.followUp({
+                    content: `❌ Could not verify your ${verification.type === 'korone' ? 'Korone' : 'ECSR'} account. Please try again later.`,
+                    ephemeral: true
+                });
+            }
+            
+            // Check if the code is in the about section
+            const serviceName = verification.type === 'korone' ? 'Korone' : 'ECSR';
+            const aboutSection = userData.user.description || '';
+            
+            if (!aboutSection.includes(verification.code)) {
+                return interaction.followUp({
+                    content: `❌ Verification failed! The code was not found in your ${serviceName} profile's About section.\n\nPlease make sure to:\n1. Copy the exact code: \`${verification.code}\`\n2. Paste it into your ${serviceName} profile's About section\n3. Click the verify button again`,
+                    ephemeral: true
+                });
+            }
+            
+            // Double-check that the verification code is still valid
+            if (verification.expiresAt < Date.now()) {
+                // Clean up expired verification
+                delete db.verifications[discordId];
+                writeDB(db);
                 
-            await originalMessage.edit({ 
-                content: `${interaction.user}`,
-                embeds: [embed],
-                components: []
+                return interaction.followUp({
+                    content: `❌ Verification code has expired. Please start the linking process again.`,
+                    ephemeral: true
+                });
+            }
+            
+            // Verification successful, link the account
+            if (!db.users) db.users = {};
+            if (!db.users[discordId]) db.users[discordId] = {};
+            
+            // Check if this account is already linked to someone else
+            const existingUser = Object.entries(db.users).find(([id, accounts]) => {
+                return id !== discordId && accounts[verification.type] === verification.accountId;
+            });
+            
+            if (existingUser) {
+                return interaction.followUp({
+                    content: `❌ This ${serviceName} account is already linked to another Discord user.`,
+                    ephemeral: true
+                });
+            }
+            
+            // Initialize users object if it doesn't exist
+            if (!db.users) db.users = {};
+            if (!db.users[discordId]) db.users[discordId] = {};
+            
+            // Only now link the account
+            db.users[discordId][verification.type] = verification.accountId;
+            
+            // Mark as verified and clear the verification
+            verification.verified = true;
+            delete db.verifications[discordId];
+            
+            try {
+                writeDB(db);
+                
+                const displayId = verification.accountId.replace(/^k_/, '');
+                
+                // Send success message
+                await interaction.followUp({
+                    content: `✅ Successfully verified and linked your account to ${serviceName} ID: ${displayId} (${userData.user.displayName})`,
+                    ephemeral: true
+                });
+                
+                // Update the original message to remove the button
+                const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
+                if (originalMessage) {
+                    const embed = new EmbedBuilder()
+                        .setTitle(`✅ ${serviceName} Account Linked Successfully`)
+                        .setDescription(`Your Discord account has been linked to ${serviceName} ID: **${displayId}** (${userData.user.displayName})`)
+                        .setColor('#2ecc71');
+                        
+                    await originalMessage.edit({ 
+                        content: `${interaction.user}`,
+                        embeds: [embed],
+                        components: []
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to complete account linking:', error);
+                // If we failed to write to the DB, make sure we don't leave the account in a half-linked state
+                if (db.users[discordId]?.[verification.type] === verification.accountId) {
+                    delete db.users[discordId][verification.type];
+                    writeDB(db);
+                }
+                throw error; // This will be caught by the outer catch block
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            interaction.followUp({
+                content: '❌ An error occurred while verifying your account. Please try again later.',
+                ephemeral: true
             });
         }
         

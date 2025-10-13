@@ -93,21 +93,14 @@ function createVerification(discordId, accountId, type = 'ecsr') {
     
     if (!db.verifications) db.verifications = {};
     
+    // Don't link the account yet, just store the verification data
     db.verifications[discordId] = {
         accountId,
         type,
         code,
-        expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
+        verified: false // Mark as unverified by default
     };
-    
-    // If the account is already linked, update it
-    if (!db.users[discordId]) {
-        db.users[discordId] = {};
-    }
-    
-    // Store the account ID and type
-    db.users[discordId][type] = accountId;
-    db.users[discordId].type = type;
     
     writeDB(db);
     return code;
@@ -210,6 +203,56 @@ function getLinkedUsers() {
     return linkedUsers;
 }
 
+function unlinkAccount(discordId, type = null) {
+    const db = readDB();
+    
+    if (!db.users || !db.users[discordId]) {
+        return { success: false, message: 'User has no linked accounts.' };
+    }
+    
+    const userData = db.users[discordId];
+    
+    // If type is specified, unlink only that type
+    if (type) {
+        if (!userData[type]) {
+            return { success: false, message: `User has no linked ${type} account.` };
+        }
+        
+        const unlinkedId = userData[type];
+        delete userData[type];
+        
+        // If this was the current type, update it
+        if (userData.type === type) {
+            // Set to the other type if it exists
+            if (userData.ecsr) userData.type = 'ecsr';
+            else if (userData.korone) userData.type = 'korone';
+            else delete userData.type;
+        }
+        
+        // If no accounts left, remove the user entry
+        if (!userData.ecsr && !userData.korone) {
+            delete db.users[discordId];
+        }
+        
+        writeDB(db);
+        return { success: true, message: `Unlinked ${type} account: ${unlinkedId}`, unlinkedId };
+    }
+    
+    // If no type specified, unlink all accounts
+    const unlinkedAccounts = [];
+    if (userData.ecsr) unlinkedAccounts.push({ type: 'ecsr', id: userData.ecsr });
+    if (userData.korone) unlinkedAccounts.push({ type: 'korone', id: userData.korone });
+    
+    delete db.users[discordId];
+    writeDB(db);
+    
+    return { 
+        success: true, 
+        message: `Unlinked all accounts for user.`,
+        unlinkedAccounts 
+    };
+}
+
 module.exports = {
     createVerification,
     checkVerification,
@@ -220,5 +263,6 @@ module.exports = {
     getCachedUsername,
     clearUsernameCache,
     getCachedUsers,
-    getLinkedUsers
+    getLinkedUsers,
+    unlinkAccount
 };
