@@ -171,8 +171,14 @@ function getMembershipBadge(membershipLevel) {
 // Function to update the bot's presence
 async function sendRenewalReminder() {
     try {
-        const userId = '1422001365101576303';
-        const user = await client.users.fetch(userId);
+        const userId = '1322389041030762538';
+        const user = await client.users.fetch(userId).catch(console.error);
+        
+        if (!user) {
+            console.log('Could not find user with ID:', userId);
+            return;
+        }
+
         const embed = new EmbedBuilder()
             .setTitle('⏰ Renewal Reminder')
             .setDescription('Don\'t forget to renew the bot!')
@@ -182,44 +188,73 @@ async function sendRenewalReminder() {
             )
             .setTimestamp();
         
-        await user.send({ embeds: [embed] });
-        console.log('Sent renewal reminder DM to', user.tag);
+        // Try to send DM, but don't crash if it fails
+        try {
+            await user.send({ embeds: [embed] });
+            console.log('Sent renewal reminder DM to', user.tag);
+        } catch (dmError) {
+            console.log(`Could not send DM to ${user.tag}. They may have DMs disabled.`);
+            // You could log this to a file or database for follow-up
+        }
     } catch (error) {
-        console.error('Failed to send renewal reminder:', error);
+        console.error('Error in sendRenewalReminder:', error);
     }
 }
 
 function updatePresence() {
-    // Set initial presence
-    updateActivity();
-    
-    // Update presence every 15 seconds
-    setInterval(updateActivity, 15000);
+    const activities = [
+        { name: 'e-help | Get help!', type: 'PLAYING' },
+        { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
+        { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' },
+        { name: 'Jee, I hope the owner of Eoogle is gonna renew me!', type: 'PLAYING' }
+    ];
     
     function updateActivity() {
-        const activities = [
-            { name: 'e-help | Get help!', type: 'PLAYING' },
-            { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
-            { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' },
-            { name: 'Jee, I hope the owner of Eoogle is gonna renew me!', type: 'PLAYING' }
-        ];
-        
-        const activity = activities[Math.floor(Math.random() * activities.length)];
-        
-        client.user.setPresence({
-            activities: [{
-                name: activity.name,
-                type: activity.type
-            }],
-            status: 'online'
-        }).catch(console.error);
+        try {
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            
+            // Simple and direct presence update
+            client.user.setPresence({
+                activities: [{
+                    name: activity.name,
+                    type: activity.type
+                }],
+                status: 'online'
+            });
+        } catch (error) {
+            console.error('Failed to update presence:', error);
+        }
     }
+    
+    // Set initial activity
+    updateActivity();
+    
+    // Update activity every 15 seconds
+    setInterval(updateActivity, 15000);
 }
 
 client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    
+    // Set initial status
+    try {
+        client.user.setPresence({
+            status: 'online',
+            activities: [{ name: 'Starting up...', type: 'PLAYING' }]
+        });
+    } catch (error) {
+        console.error('Failed to set initial presence:', error);
+    }
+    
+    // Start presence updates
     updatePresence();
-    await sendRenewalReminder();
+    
+    // Send renewal reminder
+    try {
+        await sendRenewalReminder();
+    } catch (error) {
+        console.error('Failed to send renewal reminder:', error);
+    }
 });
 
 async function resolveUserId(input, message) {
