@@ -215,9 +215,24 @@ async function checkGitHubCommits() {
             req.end();
         });
 
-        // If we haven't checked before, just store the latest commit and return
+        // If we haven't checked before, store the latest commit and send initial commit
         if (!lastCheckedCommit) {
             lastCheckedCommit = commits[0].sha;
+            // Don't return, continue to send the initial commit
+            if (commits.length > 0) {
+                const channel = await client.channels.fetch('1424094195307647126').catch(console.error);
+                if (!channel) return;
+
+                const commit = commits[0];
+                const embed = new EmbedBuilder()
+                    .setTitle('📝 Latest Commit to Eoogle')
+                    .setURL('https://github.com/RevivalSearch/Eoogle/commits/main')
+                    .setColor('#2ecc71')
+                    .setDescription(`Starting to track new commits from now on. Last commit was:\n\`${commit.sha.substring(0, 7)}\` ${commit.commit?.message?.split('\n')[0]?.substring(0, 100) || 'No commit message'}`)
+                    .setTimestamp();
+                
+                await channel.send({ embeds: [embed] }).catch(console.error);
+            }
             return;
         }
 
@@ -345,14 +360,11 @@ client.on('ready', async () => {
         console.error('Failed to set initial presence:', error);
     }
     
-    // Initial GitHub commit check
-    await checkGitHubCommits();
+    // Initial GitHub commit check - run immediately
+    await checkGitHubCommits().catch(console.error);
     
-    // Check for new commits every 30 seconds
-    setInterval(checkGitHubCommits, 30 * 1000);
-    
-    // Also check immediately on startup
-    checkGitHubCommits();
+    // Then set up regular checks every 30 seconds
+    setInterval(() => checkGitHubCommits().catch(console.error), 30 * 1000);
     
     // Start presence updates
     updatePresence();
