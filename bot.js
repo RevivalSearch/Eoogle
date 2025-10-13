@@ -215,24 +215,9 @@ async function checkGitHubCommits() {
             req.end();
         });
 
-        // If we haven't checked before, store the latest commit and send initial commit
+        // If we haven't checked before, just store the latest commit and return
         if (!lastCheckedCommit) {
             lastCheckedCommit = commits[0].sha;
-            // Don't return, continue to send the initial commit
-            if (commits.length > 0) {
-                const channel = await client.channels.fetch('1424094195307647126').catch(console.error);
-                if (!channel) return;
-
-                const commit = commits[0];
-                const embed = new EmbedBuilder()
-                    .setTitle('📝 Latest Commit to Eoogle')
-                    .setURL('https://github.com/RevivalSearch/Eoogle/commits/main')
-                    .setColor('#2ecc71')
-                    .setDescription(`Starting to track new commits from now on. Last commit was:\n\`${commit.sha.substring(0, 7)}\` ${commit.commit?.message?.split('\n')[0]?.substring(0, 100) || 'No commit message'}`)
-                    .setTimestamp();
-                
-                await channel.send({ embeds: [embed] }).catch(console.error);
-            }
             return;
         }
 
@@ -317,18 +302,27 @@ async function sendRenewalReminder() {
 }
 
 function updatePresence() {
-    const activities = [
-        { name: 'e-help | Get help!', type: 'PLAYING' },
-        { name: `Holding ${getCachedUsers().length} users in cache!`, type: 'WATCHING' },
-        { name: 'Eoogle, Google. No? e-help', type: 'PLAYING' },
-        { name: 'Jee, I hope the owner of Eoogle is gonna renew me!', type: 'PLAYING' }
-    ];
-    
     function updateActivity() {
         try {
+            // Get cached users count from username cache
+            const cachedUsers = getCachedUsers();
+            const totalCached = Object.keys(cachedUsers).length;
+            
+            // Get linked users count from database
+            const linkedUsers = getLinkedUsers();
+            const totalLinked = linkedUsers.length;
+            
+            const activities = [
+                { name: 'e-help | Get help!', type: 0 }, // Playing
+                { name: `Holding ${totalCached.toLocaleString()} users in cache!`, type: 3 }, // Watching
+                { name: `${totalLinked.toLocaleString()} accounts linked! Link yours now!`, type: 3 }, // Watching
+                { name: 'Eoogle, Google. No? e-help', type: 0 }, // Playing
+                { name: 'Jee, I hope the owner of Eoogle is gonna renew me!', type: 0 } // Playing
+            ];
+            
             const activity = activities[Math.floor(Math.random() * activities.length)];
             
-            // Simple and direct presence update
+            // Discord.js v14+ presence update
             client.user.setPresence({
                 activities: [{
                     name: activity.name,
@@ -344,8 +338,8 @@ function updatePresence() {
     // Set initial activity
     updateActivity();
     
-    // Update activity every 15 seconds
-    setInterval(updateActivity, 15000);
+    // Update activity every 5 seconds
+    setInterval(updateActivity, 5000);
 }
 
 client.on('ready', async () => {
@@ -355,7 +349,7 @@ client.on('ready', async () => {
     try {
         client.user.setPresence({
             status: 'online',
-            activities: [{ name: 'Starting up...', type: 'PLAYING' }]
+            activities: [{ name: 'Starting up...', type: 0 }] // 0 = Playing
         });
     } catch (error) {
         console.error('Failed to set initial presence:', error);
