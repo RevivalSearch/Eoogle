@@ -1,6 +1,7 @@
 # 🔍 [Eoogle](https://eoogle.pages.dev/)
 
 > **The open-source Discord bot that doesn't hide behind closed doors.**
+**:3**
 > **You can also add [Eoogle](https://discord.com/oauth2/authorize?client_id=1422001365101576303&permissions=8797166954496&integration_type=0&scope=bot) to your Discord server!** 
 
 Welcome to Eoogle – a Discord bot built with transparency and community at its core. While most bots keep their code locked away, we believe in doing things differently. Every line of code, every feature, and every update is here for you to explore, learn from, and contribute to.
