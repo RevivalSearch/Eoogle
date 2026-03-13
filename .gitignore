@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Environment variables
+=======
+# making sure i dont push my token like a fucktard.
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
 .env
 
 # Database files
@@ -9,7 +13,10 @@ database.json
 
 # Node modules
 node_modules/
+<<<<<<< HEAD
 .npm
+=======
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
 
 # Logs
 *.log

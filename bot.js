@@ -300,6 +300,10 @@ async function sendRenewalReminder() {
             console.log('Sent renewal reminder DM to', user.tag);
         } catch (dmError) {
             console.log(`Could not send DM to ${user.tag}. They may have DMs disabled.`);
+<<<<<<< HEAD
+=======
+            // You could log this to a file or database for follow-up
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
         }
     } catch (error) {
         console.error('Error in sendRenewalReminder:', error);
@@ -487,6 +491,7 @@ client.on('messageCreate', async message => {
             return message.reply({ embeds: [embed] });
         }
     }
+<<<<<<< HEAD
 
     // Handle koronegame command
     if (command === 'koronegame') {
@@ -577,6 +582,8 @@ client.on('messageCreate', async message => {
             return message.reply('❌ An error occurred while fetching game data.');
         }
     }
+=======
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
     
     // Handle full body thumbnail commands
     if (command === 'ecsfullbody' || command === 'koronefullbody') {
@@ -951,6 +958,7 @@ client.on('messageCreate', async message => {
         }
         
         if (command === 'unlinkuser') {
+<<<<<<< HEAD
             const args = input.split(/\s+/).filter(arg => arg.trim() !== '');
             if (args.length < 2) {
                 return message.reply('Usage: `e-unlinkuser <ecsr_id|korone_id> [type]`\nExample: `e-unlinkuser 3967 ecsr` or `e-unlinkuser 1234 korone`');
@@ -1004,6 +1012,42 @@ client.on('messageCreate', async message => {
             } catch (error) {
                 console.error('Error in unlinkuser command:', error);
                 message.reply('❌ An error occurred while trying to unlink the account. Please try again.');
+=======
+            const args = input.split(/\s+/);
+            if (args.length < 2) {
+                return message.reply('Usage: `e-unlinkuser <discord_user_id> [type]`\nExample: `e-unlinkuser 123456789` or `e-unlinkuser 123456789 ecsr`');
+            }
+            
+            const targetUserId = args[1];
+            const accountType = args[2] ? args[2].toLowerCase() : null;
+            
+            // Validate type if provided
+            if (accountType && accountType !== 'ecsr' && accountType !== 'korone') {
+                return message.reply('Invalid account type. Must be `ecsr` or `korone`.');
+            }
+            
+            const result = unlinkAccount(targetUserId, accountType);
+            
+            if (!result.success) {
+                return message.reply(`❌ ${result.message}`);
+            }
+            
+            const embed = new EmbedBuilder()
+                .setColor('#e74c3c')
+                .setTitle('🔓 Account Unlinked')
+                .setDescription(`Successfully unlinked account(s) for <@${targetUserId}>`)
+                .addFields({
+                    name: 'Details',
+                    value: result.message,
+                    inline: false
+                })
+                .setTimestamp();
+            
+            try {
+                await message.reply({ embeds: [embed] });
+            } catch (error) {
+                console.error('Failed to send unlink confirmation:', error);
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             }
         }
         
@@ -1192,9 +1236,12 @@ client.on('messageCreate', async message => {
             }
 
             const { user, membership, headshotUrl } = data;
+<<<<<<< HEAD
 
             // Get follow counts
             const { followers, following } = await getFollowCounts(user.id, command === 'korone' ? 'korone' : 'ecsr');
+=======
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             // Build badges string
             const badges = [];
@@ -1203,19 +1250,30 @@ client.on('messageCreate', async message => {
             if (user.isStaff) badges.push(EMOJIS.admin);
             const membershipBadge = getMembershipBadge(membership);
             if (membershipBadge) badges.push(membershipBadge);
+<<<<<<< HEAD
 
             // Add "known" badge if user has 500 or more followers
             if (typeof followers === 'number' && followers >= 500) {
                 badges.push(EMOJIS.known);
             }
+=======
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             // Special users configuration per service
             const specialUsers = {
                 'ecsr': [
                     '3967', // ECSR user ID 1
+<<<<<<< HEAD
                 ],
                 'korone': [
                     '5226', // Korone user ID 1
+=======
+                    // Add more ECSR user IDs as needed
+                ],
+                'korone': [
+                    '5226', // Korone user ID 1
+                    // Add more Korone user IDs as needed
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
                 ]
             };
             
@@ -1231,6 +1289,12 @@ client.on('messageCreate', async message => {
                 return accounts[revival] === user.id.toString() || accounts[revival] === user.id;
             });
             const linkedDiscord = discordLink ? `<@${discordLink[0]}>` : 'Nobody';
+<<<<<<< HEAD
+=======
+
+            // Get follow counts
+            const { followers, following } = await getFollowCounts(user.id, command === 'korone' ? 'korone' : 'ecsr');
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             const embed = new EmbedBuilder()
                 .setColor('#0099ff')
@@ -1358,8 +1422,12 @@ client.on('messageCreate', async message => {
                     name: '🔍 Korone Commands',
                     value: `\`e-korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
                            '`e-koronenames <userid|@mention>` - Get Korone username history\n' +
+<<<<<<< HEAD
                            '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n' +
                            '`e-koronegame <placeid>` - Get Korone game info\n',
+=======
+                           '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n',
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
                     inline: false
                 },
                 {
@@ -1522,4 +1590,8 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+<<<<<<< HEAD
 client.login(process.env.DISCORD_TOKEN);
+=======
+client.login(process.env.DISCORD_TOKEN);
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f

@@ -206,6 +206,7 @@ function getLinkedUsers() {
 function unlinkAccount(discordId, type = null) {
     const db = readDB();
     
+<<<<<<< HEAD
     // Initialize users object if it doesn't exist
     if (!db.users) {
         db.users = {};
@@ -215,11 +216,15 @@ function unlinkAccount(discordId, type = null) {
     
     // Check if user exists and has any linked accounts
     if (!db.users[discordId] || (!db.users[discordId].ecsr && !db.users[discordId].korone)) {
+=======
+    if (!db.users || !db.users[discordId]) {
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
         return { success: false, message: 'User has no linked accounts.' };
     }
     
     const userData = db.users[discordId];
     
+<<<<<<< HEAD
     // If type is specified, validate it
     if (type && type !== 'ecsr' && type !== 'korone') {
         return { success: false, message: 'Invalid account type. Must be "ecsr" or "korone".' };
@@ -234,6 +239,12 @@ function unlinkAccount(discordId, type = null) {
                 ? `User has no linked ${type} account, but has a linked ${otherType} account.`
                 : 'User has no linked accounts.';
             return { success: false, message };
+=======
+    // If type is specified, unlink only that type
+    if (type) {
+        if (!userData[type]) {
+            return { success: false, message: `User has no linked ${type} account.` };
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
         }
         
         const unlinkedId = userData[type];

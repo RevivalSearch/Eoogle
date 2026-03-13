@@ -16,7 +16,12 @@
   "dependencies": {
     "discord.js": "^14.22.1",
     "dotenv": "^17.2.2",
+<<<<<<< HEAD
     "node-fetch": "^2.7.0"
+=======
+    "node-fetch": "^2.7.0",
+    "octokit": "^5.0.3"
+>>>>>>> 14347e912349c1c6c154943925175025f8aa437f
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
