@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder, User, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const fetch = require('node-fetch');
 const https = require('https');
+const { exec } = require('child_process');
 const { getLinkedAccount, readDB, writeDB, createVerification, checkVerification, clearUsernameCache, getCachedUsers, getLinkedUsers, unlinkAccount } = require('./db');
 
 const ECSR_BASE_URL = 'https://ecsr.io';
@@ -250,7 +251,7 @@ async function checkGitHubCommits() {
                     .setTitle(`📝 New ${chunk.length > 1 ? 'Commits' : 'Commit'} to Eoogle`)
                     .setURL('https://github.com/RevivalSearch/Eoogle/commits/master')
                     .setColor('#2ecc71')
-                    .setFooter({ text: 'These updates are not immediate, They will be pushed to the server.', iconURL: client.user.displayAvatarURL() })
+                    .setFooter({ text: 'Auto-update in progress — bot will restart shortly.', iconURL: client.user.displayAvatarURL() })
                     .setTimestamp();
 
                 for (const commit of chunk) {
@@ -268,6 +269,44 @@ async function checkGitHubCommits() {
 
                 await channel.send({ embeds: [embed] }).catch(console.error);
             }
+
+            // Pull latest changes and restart
+            console.log('New commits detected, pulling latest changes...');
+            exec('git pull', { cwd: '/home/container' }, async (err, stdout, stderr) => {
+                console.log('Git pull output:', stdout);
+                if (err) {
+                    console.error('Git pull failed:', stderr);
+                    const errChannel = await client.channels.fetch('1424094195307647126').catch(console.error);
+                    if (errChannel) {
+                        const errorEmbed = new EmbedBuilder()
+                            .setTitle('❌ Auto-Update Failed')
+                            .setDescription('Git pull failed. Manual update required.')
+                            .addFields({ name: 'Error', value: `\`\`\`${(stderr || err.message).substring(0, 1000)}\`\`\`` })
+                            .setColor('#FF0000')
+                            .setTimestamp();
+                        await errChannel.send({ embeds: [errorEmbed] }).catch(console.error);
+                    }
+                    return;
+                }
+
+                // Send success message then restart
+                const successChannel = await client.channels.fetch('1424094195307647126').catch(console.error);
+                if (successChannel) {
+                    const restartEmbed = new EmbedBuilder()
+                        .setTitle('🔄 Auto-Update Applied')
+                        .setDescription('Successfully pulled latest changes. Restarting bot...')
+                        .addFields({ name: 'Git Output', value: `\`\`\`${(stdout.trim() || 'Already up to date.').substring(0, 1000)}\`\`\`` })
+                        .setColor('#2ecc71')
+                        .setTimestamp();
+                    await successChannel.send({ embeds: [restartEmbed] }).catch(console.error);
+                }
+
+                // Give Discord a moment to send the message before exiting
+                setTimeout(() => {
+                    console.log('Restarting bot for update...');
+                    process.exit(0);
+                }, 3000);
+            });
         }
     } catch (error) {
         console.error('Error checking GitHub commits:', error);
@@ -490,7 +529,7 @@ client.on('messageCreate', async message => {
 
     // Handle koronegame command
     if (command === 'koronegame') {
-        const placeId = input.trim();
+        const placeId = args[0]?.trim();
 
         if (!placeId || isNaN(placeId)) {
             return message.reply('❌ Please provide a valid place ID. Example: `e-koronegame 483449`');
@@ -520,11 +559,20 @@ client.on('messageCreate', async message => {
 
             const data = await response.json();
 
-            if (!Array.isArray(data) || data.length === 0) {
+            // API can return array or object
+            let game;
+            if (Array.isArray(data)) {
+                if (data.length === 0) return message.reply('❌ No game found with that place ID.');
+                game = data[0];
+            } else if (data && typeof data === 'object' && !data.errors) {
+                game = data;
+            } else {
                 return message.reply('❌ No game found with that place ID.');
             }
 
-            const game = data[0];
+            if (!game || !game.placeId) {
+                return message.reply('❌ No game found with that place ID.');
+            }
 
             // Truncate description to fit within embed limits
             const description = game.description
