@@ -300,10 +300,6 @@ async function sendRenewalReminder() {
             console.log('Sent renewal reminder DM to', user.tag);
         } catch (dmError) {
             console.log(`Could not send DM to ${user.tag}. They may have DMs disabled.`);
-<<<<<<< HEAD
-=======
-            // You could log this to a file or database for follow-up
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
         }
     } catch (error) {
         console.error('Error in sendRenewalReminder:', error);
@@ -491,99 +487,6 @@ client.on('messageCreate', async message => {
             return message.reply({ embeds: [embed] });
         }
     }
-<<<<<<< HEAD
-
-    // Handle koronegame command
-    if (command === 'koronegame') {
-        const placeId = input.trim();
-
-        if (!placeId || isNaN(placeId)) {
-            return message.reply('❌ Please provide a valid place ID. Example: `e-koronegame 483449`');
-        }
-
-        try {
-            const loadingEmbed = new EmbedBuilder()
-                .setColor('#d97000')
-                .setAuthor({
-                    name: 'Loading Korone Game',
-                    iconURL: 'https://www.pekora.zip/img/korone-icon-square1.png'
-                })
-                .setDescription(`Fetching place data for ID: **${placeId}**`);
-
-            const loadingMessage = await message.channel.send({ embeds: [loadingEmbed] });
-
-            const response = await fetch(
-                `${KORONE_BASE_URL}/apisite/games/v1/games/multiget-place-details?placeIds=${placeId}`,
-                fetchOptions
-            );
-
-            await loadingMessage.delete().catch(console.error);
-
-            if (!response.ok) {
-                return message.reply(`❌ Failed to fetch game data (HTTP ${response.status}).`);
-            }
-
-            const data = await response.json();
-
-            if (!Array.isArray(data) || data.length === 0) {
-                return message.reply('❌ No game found with that place ID.');
-            }
-
-            const game = data[0];
-
-            // Truncate description to fit within embed limits
-            const description = game.description
-                ? (game.description.length > 300
-                    ? game.description.substring(0, 297) + '...'
-                    : game.description)
-                : 'No description provided.';
-
-            // Format dates
-            const createdDate = game.created ? new Date(game.created).toLocaleDateString() : 'N/A';
-            const updatedDate = game.updated ? new Date(game.updated).toLocaleDateString() : 'N/A';
-
-            // Status indicators
-            const playableStatus = game.isPlayable ? '✅ Playable' : '🔒 Not Playable';
-            const priceDisplay = game.price !== null && game.price !== undefined
-                ? `${game.price} R$`
-                : 'Free';
-
-            const embed = new EmbedBuilder()
-                .setColor('#d97000')
-                .setTitle(`🎮 ${game.name || 'Unknown Game'}`)
-                .setURL(`${KORONE_BASE_URL}/games/${game.placeId}/`)
-                .setDescription(description)
-                .addFields(
-                    { name: '🏗️ Builder', value: game.builder
-                        ? `[${game.builder}](${KORONE_BASE_URL}/users/${game.builderId}/profile)`
-                        : 'Unknown', inline: true },
-                    { name: '📅 Year', value: game.year?.toString() || 'N/A', inline: true },
-                    { name: '🎭 Genre', value: game.genre || 'N/A', inline: true },
-                    { name: '👥 Players', value: game.playerCount?.toString() || '0', inline: true },
-                    { name: '🔢 Max Players', value: game.maxPlayerCount?.toString() || 'N/A', inline: true },
-                    { name: '💰 Price', value: priceDisplay, inline: true },
-                    { name: '🔓 Status', value: playableStatus, inline: true },
-                    { name: '🆔 Place ID', value: game.placeId?.toString() || placeId, inline: true },
-                    { name: '🌌 Universe ID', value: game.universeId?.toString() || 'N/A', inline: true },
-                    { name: '📆 Created', value: createdDate, inline: true },
-                    { name: '🔄 Last Updated', value: updatedDate, inline: true },
-                    { name: '✅ Moderation', value: game.moderationStatus || 'N/A', inline: true }
-                )
-                .setFooter({
-                    text: 'Eoogle - Korone Game Info',
-                    iconURL: client.user.displayAvatarURL()
-                })
-                .setTimestamp();
-
-            return message.channel.send({ embeds: [embed] });
-
-        } catch (error) {
-            console.error('Error in koronegame command:', error);
-            return message.reply('❌ An error occurred while fetching game data.');
-        }
-    }
-=======
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
     
     // Handle full body thumbnail commands
     if (command === 'ecsfullbody' || command === 'koronefullbody') {
@@ -958,7 +861,6 @@ client.on('messageCreate', async message => {
         }
         
         if (command === 'unlinkuser') {
-<<<<<<< HEAD
             const args = input.split(/\s+/).filter(arg => arg.trim() !== '');
             if (args.length < 2) {
                 return message.reply('Usage: `e-unlinkuser <ecsr_id|korone_id> [type]`\nExample: `e-unlinkuser 3967 ecsr` or `e-unlinkuser 1234 korone`');
@@ -1012,42 +914,6 @@ client.on('messageCreate', async message => {
             } catch (error) {
                 console.error('Error in unlinkuser command:', error);
                 message.reply('❌ An error occurred while trying to unlink the account. Please try again.');
-=======
-            const args = input.split(/\s+/);
-            if (args.length < 2) {
-                return message.reply('Usage: `e-unlinkuser <discord_user_id> [type]`\nExample: `e-unlinkuser 123456789` or `e-unlinkuser 123456789 ecsr`');
-            }
-            
-            const targetUserId = args[1];
-            const accountType = args[2] ? args[2].toLowerCase() : null;
-            
-            // Validate type if provided
-            if (accountType && accountType !== 'ecsr' && accountType !== 'korone') {
-                return message.reply('Invalid account type. Must be `ecsr` or `korone`.');
-            }
-            
-            const result = unlinkAccount(targetUserId, accountType);
-            
-            if (!result.success) {
-                return message.reply(`❌ ${result.message}`);
-            }
-            
-            const embed = new EmbedBuilder()
-                .setColor('#e74c3c')
-                .setTitle('🔓 Account Unlinked')
-                .setDescription(`Successfully unlinked account(s) for <@${targetUserId}>`)
-                .addFields({
-                    name: 'Details',
-                    value: result.message,
-                    inline: false
-                })
-                .setTimestamp();
-            
-            try {
-                await message.reply({ embeds: [embed] });
-            } catch (error) {
-                console.error('Failed to send unlink confirmation:', error);
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             }
         }
         
@@ -1236,12 +1102,9 @@ client.on('messageCreate', async message => {
             }
 
             const { user, membership, headshotUrl } = data;
-<<<<<<< HEAD
 
             // Get follow counts
             const { followers, following } = await getFollowCounts(user.id, command === 'korone' ? 'korone' : 'ecsr');
-=======
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             // Build badges string
             const badges = [];
@@ -1250,30 +1113,19 @@ client.on('messageCreate', async message => {
             if (user.isStaff) badges.push(EMOJIS.admin);
             const membershipBadge = getMembershipBadge(membership);
             if (membershipBadge) badges.push(membershipBadge);
-<<<<<<< HEAD
 
             // Add "known" badge if user has 500 or more followers
             if (typeof followers === 'number' && followers >= 500) {
                 badges.push(EMOJIS.known);
             }
-=======
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             // Special users configuration per service
             const specialUsers = {
                 'ecsr': [
                     '3967', // ECSR user ID 1
-<<<<<<< HEAD
                 ],
                 'korone': [
                     '5226', // Korone user ID 1
-=======
-                    // Add more ECSR user IDs as needed
-                ],
-                'korone': [
-                    '5226', // Korone user ID 1
-                    // Add more Korone user IDs as needed
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
                 ]
             };
             
@@ -1289,12 +1141,6 @@ client.on('messageCreate', async message => {
                 return accounts[revival] === user.id.toString() || accounts[revival] === user.id;
             });
             const linkedDiscord = discordLink ? `<@${discordLink[0]}>` : 'Nobody';
-<<<<<<< HEAD
-=======
-
-            // Get follow counts
-            const { followers, following } = await getFollowCounts(user.id, command === 'korone' ? 'korone' : 'ecsr');
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
             
             const embed = new EmbedBuilder()
                 .setColor('#0099ff')
@@ -1422,12 +1268,8 @@ client.on('messageCreate', async message => {
                     name: '🔍 Korone Commands',
                     value: `\`e-korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
                            '`e-koronenames <userid|@mention>` - Get Korone username history\n' +
-<<<<<<< HEAD
                            '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n' +
                            '`e-koronegame <placeid>` - Get Korone game info\n',
-=======
-                           '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n',
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
                     inline: false
                 },
                 {
@@ -1590,8 +1432,5 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-<<<<<<< HEAD
 client.login(process.env.DISCORD_TOKEN);
-=======
 client.login(process.env.DISCORD_TOKEN);
->>>>>>> 14347e912349c1c6c154943925175025f8aa437f
