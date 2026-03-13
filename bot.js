@@ -543,10 +543,17 @@ client.on('messageCreate', async message => {
                 ? `${game.price} R$`
                 : 'Free';
 
+            // Build slug from game name: spaces/special chars -> hyphens
+            const nameSlug = (game.name || 'Unknown')
+                .replace(/[^a-zA-Z0-9 ]/g, '')
+                .trim()
+                .replace(/\s+/g, '-');
+            const gameUrl = `${KORONE_BASE_URL}/games/${game.placeId}/${nameSlug}`;
+
             const embed = new EmbedBuilder()
                 .setColor('#d97000')
                 .setTitle(`🎮 ${game.name || 'Unknown Game'}`)
-                .setURL(`${KORONE_BASE_URL}/games/${game.placeId}/`)
+                .setURL(gameUrl)
                 .setDescription(description)
                 .addFields(
                     { name: '🏗️ Builder', value: game.builder
@@ -557,7 +564,6 @@ client.on('messageCreate', async message => {
                     { name: '👥 Players', value: game.playerCount?.toString() || '0', inline: true },
                     { name: '🔢 Max Players', value: game.maxPlayerCount?.toString() || 'N/A', inline: true },
                     { name: '💰 Price', value: priceDisplay, inline: true },
-                    { name: '🔓 Status', value: playableStatus, inline: true },
                     { name: '🆔 Place ID', value: game.placeId?.toString() || placeId, inline: true },
                     { name: '🌌 Universe ID', value: game.universeId?.toString() || 'N/A', inline: true },
                     { name: '📆 Created', value: createdDate, inline: true },
