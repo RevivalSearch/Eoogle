@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# Database files
+database.json
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules
+node_modules/
+.npm
+
+# Logs
+*.log
+npm-debug.log*
