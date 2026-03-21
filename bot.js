@@ -631,7 +631,211 @@ client.on('messageCreate', async message => {
             return message.reply('❌ An error occurred while fetching game data.');
         }
     }
+
+    // Handle koronebadge command
+    if (command === 'koronebadge') {
+        const badgeId = args[0]?.trim();
+
+        if (!badgeId || isNaN(badgeId)) {
+            return message.reply('❌ Please provide a valid badge ID. Example: `e-koronebadge 416694`');
+        }
+
+        try {
+            const loadingEmbed = new EmbedBuilder()
+                .setColor('#d97000')
+                .setAuthor({
+                    name: 'Loading Korone Badge',
+                    iconURL: 'https://www.pekora.zip/img/korone-icon-square1.png'
+                })
+                .setDescription(`Fetching badge data for ID: **${badgeId}**`);
+
+            const loadingMessage = await message.channel.send({ embeds: [loadingEmbed] });
+
+            const [badgeRes, thumbRes] = await Promise.all([
+                fetch(`${KORONE_BASE_URL}/apisite/badges/v1/badges/${badgeId}`, fetchOptions),
+                fetch(`${KORONE_BASE_URL}/apisite/thumbnails/v1/assets?assetIds=${badgeId}&format=png&size=420x420`, fetchOptions)
+            ]);
+
+            await loadingMessage.delete().catch(console.error);
+
+            if (!badgeRes.ok) {
+                if (badgeRes.status === 404) {
+                    return message.reply('❌ No badge found with that ID.');
+                }
+                return message.reply(`❌ Failed to fetch badge data (HTTP ${badgeRes.status}).`);
+            }
+
+            const badge = await badgeRes.json();
+
+            if (!badge || !badge.id) {
+                return message.reply('❌ No badge found with that ID.');
+            }
+
+            // Get badge thumbnail
+            let badgeImageUrl = null;
+            if (thumbRes.ok) {
+                const thumbData = await thumbRes.json();
+                const thumbEntry = thumbData.data?.[0];
+                if (thumbEntry?.imageUrl) {
+                    badgeImageUrl = thumbEntry.imageUrl.startsWith('http')
+                        ? thumbEntry.imageUrl
+                        : `${KORONE_BASE_URL}${thumbEntry.imageUrl}`;
+                }
+            }
+
+            // Format dates
+            const createdDate = badge.created ? new Date(badge.created).toLocaleDateString() : 'N/A';
+            const updatedDate = badge.updated ? new Date(badge.updated).toLocaleDateString() : 'N/A';
+
+            // Format stats
+            const awardedCount = badge.statistics?.awardedCount ?? 0;
+            const pastDayCount = badge.statistics?.pastDayAwardedCount ?? 0;
+            const winRate = badge.statistics?.winRatePercentage ?? 0;
+
+            // Awarding universe link
+            const universeId = badge.awardingUniverse?.id;
+            const rootPlaceId = badge.awardingUniverse?.rootPlaceId;
+            const universeName = badge.awardingUniverse?.name || 'Unknown Game';
+            const universeValue = rootPlaceId
+                ? `[${universeName}](${KORONE_BASE_URL}/games/${rootPlaceId})`
+                : universeName;
+
+            const embed = new EmbedBuilder()
+                .setColor('#d97000')
+                .setTitle(`🏅 ${badge.displayName || badge.name || 'Unknown Badge'}`)
+                .setDescription(badge.displayDescription || badge.description || 'No description provided.')
+                .addFields(
+                    { name: '🆔 Badge ID', value: badge.id.toString(), inline: true },
+                    { name: '✅ Enabled', value: badge.enabled ? 'Yes' : 'No', inline: true },
+                    { name: '🔍 Moderation', value: badge.moderationStatus || 'N/A', inline: true },
+                    { name: '🎮 Awarding Game', value: universeValue, inline: true },
+                    { name: '🏆 Times Awarded', value: awardedCount.toLocaleString(), inline: true },
+                    { name: '📅 Awarded Today', value: pastDayCount.toLocaleString(), inline: true },
+                    { name: '📊 Win Rate', value: `${winRate}%`, inline: true },
+                    { name: '📆 Created', value: createdDate, inline: true },
+                    { name: '🔄 Last Updated', value: updatedDate, inline: true }
+                )
+                .setFooter({
+                    text: 'Eoogle - Korone Badge Info',
+                    iconURL: client.user.displayAvatarURL()
+                })
+                .setTimestamp();
+
+            if (badgeImageUrl) {
+                embed.setThumbnail(badgeImageUrl);
+            }
+
+            return message.channel.send({ embeds: [embed] });
+
+        } catch (error) {
+            console.error('Error in koronebadge command:', error);
+            return message.reply('❌ An error occurred while fetching badge data.');
+        }
+    }
     
+    // Handle koronegroup command
+    if (command === 'koronegroup') {
+        const groupId = args[0]?.trim();
+
+        if (!groupId || isNaN(groupId)) {
+            return message.reply('❌ Please provide a valid group ID. Example: `e-koronegroup 123`');
+        }
+
+        try {
+            const loadingEmbed = new EmbedBuilder()
+                .setColor('#d97000')
+                .setAuthor({
+                    name: 'Loading Korone Group',
+                    iconURL: 'https://www.pekora.zip/img/korone-icon-square1.png'
+                })
+                .setDescription(`Fetching group data for ID: **${groupId}**`);
+
+            const loadingMessage = await message.channel.send({ embeds: [loadingEmbed] });
+
+            const [groupRes, thumbRes] = await Promise.all([
+                fetch(`${KORONE_BASE_URL}/apisite/groups/v1/groups/${groupId}`, fetchOptions),
+                fetch(`${KORONE_BASE_URL}/apisite/thumbnails/v1/groups/icons?groupIds=${groupId}&format=png&size=420x420`, fetchOptions)
+            ]);
+
+            await loadingMessage.delete().catch(console.error);
+
+            if (!groupRes.ok) {
+                if (groupRes.status === 404) {
+                    return message.reply('❌ No group found with that ID.');
+                }
+                return message.reply(`❌ Failed to fetch group data (HTTP ${groupRes.status}).`);
+            }
+
+            const group = await groupRes.json();
+
+            if (!group || !group.id) {
+                return message.reply('❌ No group found with that ID.');
+            }
+
+            // Get group icon thumbnail
+            let groupIconUrl = null;
+            if (thumbRes.ok) {
+                const thumbData = await thumbRes.json();
+                const thumbEntry = thumbData.data?.[0];
+                if (thumbEntry?.imageUrl) {
+                    groupIconUrl = thumbEntry.imageUrl.startsWith('http')
+                        ? thumbEntry.imageUrl
+                        : `${KORONE_BASE_URL}${thumbEntry.imageUrl}`;
+                }
+            }
+
+            // Owner info
+            const ownerValue = group.owner
+                ? `[${group.owner.username || group.owner.displayName}](${KORONE_BASE_URL}/users/${group.owner.userId}/profile)`
+                : 'None';
+
+            // Shout
+            const shoutValue = group.shout?.body
+                ? (group.shout.body.length > 200
+                    ? group.shout.body.substring(0, 197) + '...'
+                    : group.shout.body)
+                : 'No shout';
+
+            // Description
+            const descValue = group.description
+                ? (group.description.length > 300
+                    ? group.description.substring(0, 297) + '...'
+                    : group.description)
+                : 'No description provided.';
+
+            const groupUrl = `${KORONE_BASE_URL}/groups/${group.id}`;
+
+            const embed = new EmbedBuilder()
+                .setColor('#d97000')
+                .setTitle(`👥 ${group.name || 'Unknown Group'}`)
+                .setURL(groupUrl)
+                .setDescription(descValue)
+                .addFields(
+                    { name: '🆔 Group ID', value: group.id.toString(), inline: true },
+                    { name: '👑 Owner', value: ownerValue, inline: true },
+                    { name: '👤 Members', value: (group.memberCount ?? 'N/A').toLocaleString(), inline: true },
+                    { name: '🔒 Public', value: group.publicEntryAllowed ? 'Yes' : 'No', inline: true },
+                    { name: '🔞 Verified', value: group.hasVerifiedBadge ? 'Yes' : 'No', inline: true },
+                    { name: '📢 Shout', value: shoutValue, inline: false }
+                )
+                .setFooter({
+                    text: 'Eoogle - Korone Group Info',
+                    iconURL: client.user.displayAvatarURL()
+                })
+                .setTimestamp();
+
+            if (groupIconUrl) {
+                embed.setThumbnail(groupIconUrl);
+            }
+
+            return message.channel.send({ embeds: [embed] });
+
+        } catch (error) {
+            console.error('Error in koronegroup command:', error);
+            return message.reply('❌ An error occurred while fetching group data.');
+        }
+    }
+
     // Handle full body thumbnail commands
     if (command === 'ecsfullbody' || command === 'koronefullbody') {
         const revival = command === 'koronefullbody' ? 'korone' : 'ecsr';
@@ -1413,7 +1617,9 @@ client.on('messageCreate', async message => {
                     value: `\`e-korone <userid|@mention>\` - Get Korone user info (e.g., [12345](${KORONE_BASE_URL}/users/12345/profile))\n` +
                            '`e-koronenames <userid|@mention>` - Get Korone username history\n' +
                            '`e-koronefullbody <userid>` - Get Korone full body thumbnail\n' +
-                           '`e-koronegame <placeid>` - Get Korone game info\n',
+                           '`e-koronegame <placeid>` - Get Korone game info\n' +
+                           '`e-koronebadge <badgeid>` - Get Korone badge info\n' +
+                           '`e-koronegroup <groupid>` - Get Korone group info\n',
                     inline: false
                 },
                 {
