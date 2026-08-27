@@ -1,7 +1,7 @@
 <<<<<<< HEAD
 # Eoogle Discord Bot
-
-A Discord bot that fetches user information from the ECSR API.
+## AS OF 2026-08-27 EOOGLE HAS SHUTDOWN
+A Discord bot that fetches user information from the ECSR API
 
 ## Setup
 
