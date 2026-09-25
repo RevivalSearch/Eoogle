@@ -1,11 +1,17 @@
-# Notice.
-- Eoogle is shutting down permanently as of 2026-09-25.
+# Notice
 
-# Why?
-- Eoogle supported 2 revivals. ECS:R and Korone. They shutdown fairly recently and I am unable to bring myself to work on this project.
+**Eoogle is shutting down permanently as of 2026-09-25.**
 
-# What do I do with Eoogle's Source?
-- Use it. Make it for good revivals like https://pekora.pro or something. even Madoka.
+## Why?
 
-# Thanks.
-- I thank the entire ORC Community for contributing to ECS:R and Korone to bring myself to make this project in the first place. Thank you Supra, Thank you Samuel, Thank you Shady.
+Eoogle supported two revivals: ECS:R and Korone. Both shut down recently, and I can't bring myself to keep working on this project.
+
+## What happens to Eoogle's source?
+
+Use it! Adapt it for other good revivals, like [Pekora.pro](https://pekora.pro) or even Madoka. Most revivals built on the ECS codebase share the same API layout, so it should be easy to point at a new site.
+
+## Thanks
+
+Thank you to the entire ORC community for contributing to ECS:R and Korone. You're the reason I made this project in the first place.
+
+Thank you Supra, thank you Samuel, thank you Shady.
